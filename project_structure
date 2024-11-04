@@ -1,8 +1,0 @@
-website_builder_1/
-├── main.py
-├── downloader.py
-├── face_swapper.py
-├── site_builder.py
-├── requirements.txt
-├── config.py
-└── README.md 

@@ -1,8 +1,0 @@
-wget
-opencv-python-headless
-dlib
-numpy
-pillow
-beautifulsoup4
-requests
-python-dotenv 

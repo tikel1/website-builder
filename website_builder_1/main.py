@@ -47,7 +47,7 @@ def main():
     os.makedirs(swapped_images_dir, exist_ok=True)
     
     # Process images and save to swapped_images directory
-    swapper.process_directory(website_root, output_dir=swapped_images_dir)
+    swapper.process_directory(website_root, swapped_images_dir)
     
     # Commit face-swapped images
     git_commit_and_push("Add face-swapped images")

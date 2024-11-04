@@ -1,0 +1,62 @@
+.elementor-kit-171374{--e-global-color-primary:#000000;--e-global-color-secondary:#000000;--e-global-color-text:#000000;--e-global-color-accent:#000000;--e-global-color-52f6c10:#23A455;--e-global-color-b8e0a90:#000000;--e-global-color-ee0a4bf:#FFFFFF;--e-global-color-dccd73f:#FF0000;--e-global-color-9ed1eb6:#ADADAD;--e-global-color-08cacdb:#E30000;--e-global-color-93fba9a:#00000000;--e-global-typography-primary-font-weight:600;--e-global-typography-secondary-font-weight:400;--e-global-typography-text-font-weight:400;--e-global-typography-accent-font-weight:500;color:var( --e-global-color-text );font-family:"Open Sans Hebrew", "Open Sans Hebrew", OpenSansHebrew, Sans-serif;font-size:18px;font-weight:normal;line-height:1.5em;}.elementor-kit-171374 button,.elementor-kit-171374 input[type="button"],.elementor-kit-171374 input[type="submit"],.elementor-kit-171374 .elementor-button{background-color:#000000;font-family:"Open Sans Hebrew", "Open Sans Hebrew", OpenSansHebrew, Sans-serif;font-size:14px;font-weight:normal;line-height:1.5em;color:#FFFFFF;border-style:solid;border-width:1px 1px 1px 1px;border-color:#000000;border-radius:0px 0px 0px 0px;padding:7px 10px 7px 10px;}.elementor-kit-171374 button:hover,.elementor-kit-171374 button:focus,.elementor-kit-171374 input[type="button"]:hover,.elementor-kit-171374 input[type="button"]:focus,.elementor-kit-171374 input[type="submit"]:hover,.elementor-kit-171374 input[type="submit"]:focus,.elementor-kit-171374 .elementor-button:hover,.elementor-kit-171374 .elementor-button:focus{background-color:#FFFFFF;color:#000000;border-style:solid;}.elementor-kit-171374 e-page-transition{background-color:#FFBC7D;}.elementor-kit-171374 a{color:var( --e-global-color-dccd73f );}.elementor-kit-171374 a:hover{color:var( --e-global-color-9ed1eb6 );text-decoration:none;}.elementor-kit-171374 h1{color:var( --e-global-color-b8e0a90 );font-family:"Open Sans Hebrew", "Open Sans Hebrew", OpenSansHebrew, Sans-serif;font-size:40px;font-weight:bold;line-height:1.25em;}.elementor-kit-171374 h2{color:var( --e-global-color-b8e0a90 );font-family:"Open Sans Hebrew", "Open Sans Hebrew", OpenSansHebrew, Sans-serif;font-size:24px;font-weight:bold;line-height:1.5em;}.elementor-kit-171374 h3{color:var( --e-global-color-b8e0a90 );font-family:"Open Sans Hebrew", "Open Sans Hebrew", OpenSansHebrew, Sans-serif;font-size:22px;font-weight:bold;line-height:1.5em;}.elementor-kit-171374 h4{color:var( --e-global-color-b8e0a90 );font-family:"Open Sans Hebrew", "Open Sans Hebrew", OpenSansHebrew, Sans-serif;font-size:20px;font-weight:bold;line-height:1.5em;}.elementor-kit-171374 h5{color:var( --e-global-color-b8e0a90 );font-family:"Open Sans Hebrew", "Open Sans Hebrew", OpenSansHebrew, Sans-serif;font-size:18px;font-weight:bold;line-height:1.5em;}.elementor-kit-171374 h6{color:var( --e-global-color-b8e0a90 );font-family:"Open Sans Hebrew", "Open Sans Hebrew", OpenSansHebrew, Sans-serif;font-size:16px;font-weight:bold;line-height:1.5em;}.elementor-kit-171374 label{color:#000000;font-family:"Open Sans Hebrew", "Open Sans Hebrew", OpenSansHebrew, Sans-serif;font-size:14px;font-weight:normal;line-height:1.5em;}.elementor-kit-171374 input:not([type="button"]):not([type="submit"]),.elementor-kit-171374 textarea,.elementor-kit-171374 .elementor-field-textual{font-family:"Open Sans Hebrew", "Open Sans Hebrew", OpenSansHebrew, Sans-serif;font-size:14px;font-weight:normal;line-height:1.5em;color:#000000;background-color:#FFFFFF;border-style:solid;border-width:1px 1px 1px 1px;border-color:#DDDDDD;border-radius:0px 0px 0px 0px;padding:7px 10px 7px 10px;}.elementor-section.elementor-section-boxed > .elementor-container{max-width:1140px;}.e-con{--container-max-width:1140px;}{}h1.entry-title{display:var(--page-title-display);}@media(max-width:1024px){.elementor-section.elementor-section-boxed > .elementor-container{max-width:1024px;}.e-con{--container-max-width:1024px;}}@media(max-width:767px){.elementor-kit-171374{font-size:17px;}.elementor-section.elementor-section-boxed > .elementor-container{max-width:767px;}.e-con{--container-max-width:767px;}}/* Start custom CSS *//* Images */
+
+figcaption,
+.wp-block-image figcaption {
+    text-align: right;
+    color: #ADADAD;
+    font-size: 13px;
+    font-weight: 400;
+    font-style: normal;
+    line-height: 1.5em;
+    margin-top: 0;
+}
+
+.is-light figcaption {
+    color: #000;
+}
+
+/* Rankings Table */
+
+.single-rankings td,
+.single-rankings th {
+    text-align: right;
+    font-size: 14px;
+    font-weight: normal;
+    color: #fff;
+    background-color: transparent;
+    border-inline-width: 0;
+}
+.single-rankings th {
+    font-weight: normal;
+}
+.single-rankings thead tr td,
+.single-rankings thead tr th,
+.single-rankings thead:first-child tr:first-child th {
+    border-color: #333;
+}
+.single-rankings thead tr td span,
+.single-rankings thead tr th span {
+    display: inline-block;
+    padding: 4px 10px;
+    background-color: #333;
+}
+.single-rankings thead tr th:first-of-type span {
+    background-color: red;
+}
+.single-rankings tbody tr:nth-child(odd),
+.single-rankings tbody tr:nth-child(odd) td,
+.single-rankings tbody tr:nth-child(odd) th,
+.single-rankings tbody tr:nth-child(even),
+.single-rankings tbody tr:nth-child(even) td,
+.single-rankings tbody tr:nth-child(even) th {
+    background-color: transparent;
+}
+.single-rankings tbody tr:hover td,
+.single-rankings tbody tr:hover th {
+    background-color: #222;
+}
+.single-rankings tbody a {
+    font-weight: bold;
+    color: #fff;
+    border-bottom: 1px dotted currentColor;
+}/* End custom CSS */

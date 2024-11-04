@@ -1,7 +1,6 @@
 import os
 import subprocess
 from downloader import WebsiteDownloader
-from face_swapper import FaceSwapper
 from site_builder import SiteBuilder
 
 def git_commit_and_push(message):
@@ -38,34 +37,17 @@ def main():
     # Commit original website files
     git_commit_and_push("Add original website files")
 
-    # Step 2: Process images with face swapping
-    print("Processing images...")
-    swapper = FaceSwapper()
-    
-    # Create a directory for swapped images
-    swapped_images_dir = os.path.join(website_root, 'swapped_images')
-    os.makedirs(swapped_images_dir, exist_ok=True)
-    
-    # Process images and save to swapped_images directory
-    swapper.process_directory(website_root)
-    
-    # Commit face-swapped images
-    git_commit_and_push("Add face-swapped images")
-
-    # Step 3: Build and serve the site
+    # Step 2: Build and serve the site (skipping face swapping)
     print("Building site...")
     builder = SiteBuilder(website_root)
     
     # Create all necessary directories
     os.makedirs(website_root, exist_ok=True)
     
-    # Update image paths to use swapped images where available
-    builder.update_image_paths(swapped_images_dir)
-    
-    # Commit final website with replaced images
-    git_commit_and_push("Update website with swapped images")
+    # Commit final website
+    git_commit_and_push("Update website structure")
 
-    # Step 4: Serve the website
+    # Step 3: Serve the website
     print("Starting local server...")
     builder.serve()
 

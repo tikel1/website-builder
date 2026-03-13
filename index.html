@@ -714,8 +714,8 @@ let hintTimer        = 0;   // ms remaining
 let wrongOnlyTimer   = 0;   // ms remaining — wrong-answer batteries blocked
 let blastTimer       = 0;   // ms remaining — interceptors explode in splash radius
 let shieldActive     = false;
-let specialSpawnTimer = 25000; // ms until next special missile spawn
 let specialBag        = [];    // shuffled deck — ensures full rotation before repeats
+let waveSpecialSlot   = -1;   // which spawned index triggers the special missile this wave
 let waveHasSplitter   = false; // whether the current wave ends with the fat splitter
 
 // ── Streak & Energy ──
@@ -1116,16 +1116,13 @@ function update(dt) {
       if (spawnTimer <= 0) {
         const isLast = waveHasSplitter && (spawned === totalMissiles - 1);
         missiles.push(isLast ? mkSplitter() : mkMissile());
+        // Special missile spawns alongside the pre-chosen slot (never last)
+        if (spawned === waveSpecialSlot && !missiles.some(m => m.special)) {
+          missiles.push(mkSpecialMissile());
+        }
         spawned++;
         spawnTimer = cfg.ms;
       }
-    }
-    // Special missile spawn (independent of wave count)
-    specialSpawnTimer -= dt;
-    if (specialSpawnTimer <= 0) {
-      const hasSpecial = missiles.some(m => m.special);
-      if (!hasSpecial) missiles.push(mkSpecialMissile());
-      specialSpawnTimer = ri(9000, 16000); // next special in 9-16 seconds
     }
   }
 
@@ -1368,7 +1365,8 @@ function onIntercepted(missile, ex, ey, truckX) {
   // Immediately spawn next missile
   const regularCount = missiles.filter(m => !m.mini && !m.special).length;
   if (waveActive && spawned < totalMissiles && regularCount < 3) {
-    missiles.push(mkMissile());
+    const isLast = waveHasSplitter && (spawned === totalMissiles - 1);
+    missiles.push(isLast ? mkSplitter() : mkMissile());
     spawned++;
     spawnTimer = getWaveCfg(wave).ms;
   }
@@ -1617,7 +1615,9 @@ function startWave() {
   spawnTimer = 900;
   // Splitter appears randomly — 50% chance from wave 2, capped at 75%
   waveHasSplitter = wave >= 2 && Math.random() < Math.min(0.5 + wave * 0.02, 0.75);
-  // Don't reset specialSpawnTimer here — it carries over between waves
+  // Pre-schedule special missile at a random slot in the first 65% of the wave (never last)
+  const lastAllowed = Math.max(0, Math.floor(totalMissiles * 0.65) - 1);
+  waveSpecialSlot = ri(0, lastAllowed);
   hideQ();
   missiles = []; shockwaves = [];
   questionedMissile = null;
@@ -1638,8 +1638,7 @@ function startNewGame() {
   CARD_TYPES.forEach(t => { cards[t] = false; }); updateCardUI();
   document.getElementById('laser-btn-wrap').style.display = '';
   document.getElementById('card-slots').style.display    = '';
-  specialSpawnTimer = ri(9000, 15000); // first special missile within 9-15 seconds
-  refillSpecialBag();                  // fresh shuffled deck on each new game
+  refillSpecialBag(); // fresh shuffled deck on each new game
   if (window.hj) hj('event', `game_start_diff${minMathLvl}`);
   if (gameState === 'PAUSED') {
     document.getElementById('pause-overlay').classList.add('hidden');

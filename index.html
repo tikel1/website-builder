@@ -908,10 +908,18 @@ function mkMissile() {
 }
 
 function refillSpecialBag() {
-  // Each regular type appears 2×, joker appears 1× (only from wave 4)
-  const keys = Object.keys(SPECIAL_TYPES).filter(k => k !== 'joker');
-  specialBag = [...keys, ...keys];
-  if (wave >= 4) specialBag.push('joker');
+  // Weighted distribution per design:
+  specialBag = [
+    ...Array(3).fill('freeze'),
+    ...Array(3).fill('double_score'),
+    ...Array(2).fill('hint'),
+    ...Array(3).fill('shield'),
+    ...Array(2).fill('wrong_only'),
+    ...Array(2).fill('blast'),
+    ...Array(2).fill('extra_life'),
+    ...Array(3).fill('restock'),
+  ];
+  if (wave >= 4) specialBag.push('joker'); // 1× joker from wave 4
   // Fisher-Yates shuffle
   for (let i = specialBag.length - 1; i > 0; i--) {
     const j = ri(0, i);

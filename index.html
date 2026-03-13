@@ -908,9 +908,11 @@ function mkMissile() {
 }
 
 function refillSpecialBag() {
-  // Shuffle all non-joker types into the bag (Fisher-Yates)
+  // Each regular type appears 2×, joker appears 1× (only from wave 4)
   const keys = Object.keys(SPECIAL_TYPES).filter(k => k !== 'joker');
-  specialBag = [...keys];
+  specialBag = [...keys, ...keys];
+  if (wave >= 4) specialBag.push('joker');
+  // Fisher-Yates shuffle
   for (let i = specialBag.length - 1; i > 0; i--) {
     const j = ri(0, i);
     [specialBag[i], specialBag[j]] = [specialBag[j], specialBag[i]];
@@ -918,15 +920,8 @@ function refillSpecialBag() {
 }
 
 function mkSpecialMissile() {
-  // Joker: rare (8%), only from wave 4 onward
-  let type;
-  if (wave >= 4 && Math.random() < 0.08) {
-    type = 'joker';
-  } else {
-    // Draw from shuffled bag — refill when empty (guarantees full rotation)
-    if (specialBag.length === 0) refillSpecialBag();
-    type = specialBag.pop();
-  }
+  if (specialBag.length === 0) refillSpecialBag();
+  const type = specialBag.pop();
   const m = mkMissile();
   m.special     = true;
   m.specialType = type;

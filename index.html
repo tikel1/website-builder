@@ -566,7 +566,7 @@
       <button class="card-slot" id="card-swap_question" style="--card-col:#b044ff" onclick="useCard('swap_question')" title="החלפת שאלה 🔄">🔄</button>
       <button class="card-slot" id="card-wrong_only"    style="--card-col:#e03060" onclick="useCard('wrong_only')"    title="רק תשובות לא נכונות 🚫">🚫</button>
       <button class="card-slot" id="card-restock"       style="--card-col:#44dd88" onclick="useCard('restock')"       title="הצטיידות מחדש 🔋">🔋</button>
-      <button class="card-slot" id="card-blast"         style="--card-col:#ff6600" onclick="useCard('blast')"         title="פיצוץ שטח 💥">💥</button>
+      <button class="card-slot" id="card-blast"         style="--card-col:#cc44ff" onclick="useCard('blast')"         title="מגה פיצוץ 💥">💥</button>
     </div>
 
     <!-- Level-up banner -->
@@ -655,7 +655,7 @@ const SPECIAL_TYPES = {
   swap_question: { col: '#b044ff', shadow: '#6600cc', label: 'כרטיס החלפת שאלה 🔄'         },
   wrong_only:    { col: '#e03060', shadow: '#880022', label: 'כרטיס רק תשובות לא נכונות 🚫' },
   restock:       { col: '#44dd88', shadow: '#1a7740', label: 'הצטיידות מחדש 🔋'              },
-  blast:         { col: '#ff6600', shadow: '#882200', label: 'כרטיס פיצוץ שטח 💥'           },
+  blast:         { col: '#cc44ff', shadow: '#7700cc', label: 'כרטיס מגה פיצוץ 💥'           },
   joker:         { col: '#ffffff', shadow: '#999999', label: '🃏 ג\'וקר — כל הכוחות!'       },
 };
 
@@ -1410,8 +1410,8 @@ function giveCard(type) {
   cards[type] = true;
   updateCardUI();
   const icons  = { freeze: '❄️', hint: '💡', swap_question: '🔄', wrong_only: '🚫', restock: '🔋', blast: '💥' };
-  const names  = { freeze: 'הקפאה', hint: 'רמז', swap_question: 'החלפת שאלה', wrong_only: 'רק תשובות לא נכונות', restock: 'הצטיידות', blast: 'פיצוץ שטח' };
-  const cols   = { freeze: '#00d4ff', hint: '#ff9900', swap_question: '#b044ff', wrong_only: '#e03060', restock: '#44dd88', blast: '#ff6600' };
+  const names  = { freeze: 'הקפאה', hint: 'רמז', swap_question: 'החלפת שאלה', wrong_only: 'רק תשובות לא נכונות', restock: 'הצטיידות', blast: 'מגה פיצוץ' };
+  const cols   = { freeze: '#00d4ff', hint: '#ff9900', swap_question: '#b044ff', wrong_only: '#e03060', restock: '#44dd88', blast: '#cc44ff' };
   const ic = icons[type], nm = names[type], col = cols[type];
   addFloat(`${ic} ${nm}`, W / 2, H * 0.38, col);
   showPowerBanner(`${ic} ${nm}`, col);
@@ -1453,8 +1453,8 @@ function activateCardEffect(type) {
       break;
     case 'blast':
       blastTimer = 15000;
-      addFloat('💥 פיצוץ שטח!', W / 2, H * 0.38, '#ff6600');
-      showPowerBanner('💥 פיצוץ שטח', '#ff6600');
+      addFloat('💥 מגה פיצוץ!', W / 2, H * 0.38, '#cc44ff');
+      showPowerBanner('💥 מגה פיצוץ', '#cc44ff');
       break;
   }
 }
@@ -1495,7 +1495,7 @@ function triggerBlastSplash(ex, ey) {
     explosions.push(mkExplosion(m.x, m.y, true));
     let pts = Math.round((80 + wave * 5) * (doubleScoreTimer > 0 ? 2 : 1));
     score += pts;
-    addFloat(`+${pts}`, m.x, m.y - 10, '#ff6600');
+    addFloat(`+${pts}`, m.x, m.y - 10, '#cc44ff');
     streak++;
     addEnergy(Math.min(2 + streak * 0.8, 12));
     if (streak >= 3) addFloat(`🔥×${streak}`, ex, ey - 30, streak >= 7 ? '#ffd700' : '#ff8c00');
@@ -1740,7 +1740,7 @@ function drawEffects() {
   if (shieldActive)          indicators.push({ icon: '🛡', label: 'מגן',      col: '#d0d0e0', t: 1,                        timeMs: 0 });
   if (hintTimer        > 0) indicators.push({ icon: '💡', label: 'רמז',      col: '#ff9900', t: hintTimer / 6000,          timeMs: hintTimer });
   if (wrongOnlyTimer   > 0) indicators.push({ icon: '🚫', label: 'רק לא נכונות', col: '#e03060', t: wrongOnlyTimer / 10000, timeMs: wrongOnlyTimer });
-  if (blastTimer       > 0) indicators.push({ icon: '💥', label: 'פיצוץ שטח',   col: '#ff6600', t: blastTimer / 15000,     timeMs: blastTimer });
+  if (blastTimer       > 0) indicators.push({ icon: '💥', label: 'מגה פיצוץ',   col: '#cc44ff', t: blastTimer / 15000,     timeMs: blastTimer });
   if (!indicators.length) return;
 
   const barW = 82, barH = 16, pad = 6;
@@ -1883,14 +1883,14 @@ function drawBlastLabel() {
   ctx.textAlign   = 'center';
   ctx.font        = 'bold 13px Rubik, Arial';
   ctx.textBaseline = 'bottom';
-  ctx.fillStyle   = '#ff6600';
-  ctx.shadowColor = '#ff4400';
+  ctx.fillStyle   = '#cc44ff';
+  ctx.shadowColor = '#7700cc';
   ctx.shadowBlur  = 10;
-  ctx.fillText('💥 פיצוץ שטח פעיל', W / 2, H - 40);
+  ctx.fillText('💥 מגה פיצוץ פעיל', W / 2, H - 40);
   ctx.font        = `bold ${urgnt ? 22 : 18}px Rubik, Arial`;
   ctx.textBaseline = 'top';
-  ctx.fillStyle   = urgnt ? '#ff3300' : '#ff6600';
-  ctx.shadowColor = urgnt ? '#ff1100' : '#ff4400';
+  ctx.fillStyle   = urgnt ? '#ff44ff' : '#cc44ff';
+  ctx.shadowColor = urgnt ? '#cc00cc' : '#7700cc';
   ctx.shadowBlur  = urgnt ? 18 : 8;
   ctx.fillText(`${secs}`, W / 2, H - 38);
   ctx.shadowBlur = 0;
@@ -1930,14 +1930,14 @@ function drawShockwaves() {
   shockwaves.forEach(sw => {
     // Outer glow ring
     ctx.globalAlpha = sw.alpha * 0.4;
-    ctx.strokeStyle = '#ff8800';
+    ctx.strokeStyle = '#cc44ff';
     ctx.lineWidth   = 6;
-    ctx.shadowColor = '#ff4400';
+    ctx.shadowColor = '#9900cc';
     ctx.shadowBlur  = 24;
     ctx.beginPath(); ctx.arc(sw.x, sw.y, sw.r, 0, Math.PI * 2); ctx.stroke();
     // Inner sharp ring
     ctx.globalAlpha = sw.alpha * 0.7;
-    ctx.strokeStyle = '#ffcc44';
+    ctx.strokeStyle = '#ee88ff';
     ctx.lineWidth   = 2;
     ctx.shadowBlur  = 10;
     ctx.beginPath(); ctx.arc(sw.x, sw.y, sw.r * 0.72, 0, Math.PI * 2); ctx.stroke();

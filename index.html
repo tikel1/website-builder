@@ -715,7 +715,7 @@ let wrongOnlyTimer   = 0;   // ms remaining — wrong-answer batteries blocked
 let blastTimer       = 0;   // ms remaining — interceptors explode in splash radius
 let shieldActive     = false;
 let specialBag        = [];    // shuffled deck — ensures full rotation before repeats
-let waveSpecialSlot   = -1;   // which spawned index triggers the special missile this wave
+let waveSpecialSlots  = new Set(); // which spawned indices trigger a special missile this wave
 let waveHasSplitter   = false; // whether the current wave ends with the fat splitter
 
 // ── Streak & Energy ──
@@ -920,7 +920,7 @@ function refillSpecialBag() {
     ...Array(3).fill('restock'),
     ...Array(3).fill('swap_question'),
   ];
-  if (wave >= 4) specialBag.push('joker'); // 1× joker from wave 4
+  if (wave >= 4) specialBag.push('joker', 'joker'); // 2× joker from wave 4
   // Fisher-Yates shuffle
   for (let i = specialBag.length - 1; i > 0; i--) {
     const j = ri(0, i);
@@ -1116,8 +1116,8 @@ function update(dt) {
       if (spawnTimer <= 0) {
         const isLast = waveHasSplitter && (spawned === totalMissiles - 1);
         missiles.push(isLast ? mkSplitter() : mkMissile());
-        // Special missile spawns alongside the pre-chosen slot (never last)
-        if (spawned === waveSpecialSlot && !missiles.some(m => m.special)) {
+        // Special missile spawns alongside pre-chosen slots (never last)
+        if (waveSpecialSlots.has(spawned) && !missiles.some(m => m.special)) {
           missiles.push(mkSpecialMissile());
         }
         spawned++;
@@ -1615,9 +1615,12 @@ function startWave() {
   spawnTimer = 900;
   // Splitter appears randomly — 50% chance from wave 2, capped at 75%
   waveHasSplitter = wave >= 2 && Math.random() < Math.min(0.5 + wave * 0.02, 0.75);
-  // Pre-schedule special missile at a random slot in the first 65% of the wave (never last)
-  const lastAllowed = Math.max(0, Math.floor(totalMissiles * 0.65) - 1);
-  waveSpecialSlot = ri(0, lastAllowed);
+  // Pre-schedule 2 special missiles at random slots in the first 75% of the wave (never last)
+  // Split the window in half so they're naturally spaced apart
+  const window = Math.max(1, Math.floor(totalMissiles * 0.75) - 1);
+  const slot1 = ri(0, Math.floor(window / 2));
+  const slot2 = ri(Math.ceil(window / 2), window);
+  waveSpecialSlots = new Set([slot1, slot2]);
   hideQ();
   missiles = []; shockwaves = [];
   questionedMissile = null;

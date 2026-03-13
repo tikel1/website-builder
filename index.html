@@ -1,0 +1,2688 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>כיפת ברזל: עושים חשבון עם איראן</title>
+  <meta property="og:title" content="כיפת ברזל: עושים חשבון עם איראן">
+  <meta property="og:description" content="משחק מתמטיקה אינטראקטיבי — הגן על גבעתיים עם כיפת ברזל! פתרו שאלות כדי לירות טילים.">
+  <meta property="og:image" content="https://tikel1.github.io/kipat-barzel-math/logo.png">
+  <meta property="og:image:width" content="600">
+  <meta property="og:image:height" content="480">
+  <meta property="og:url" content="https://tikel1.github.io/kipat-barzel-math/">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://tikel1.github.io/kipat-barzel-math/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: #03030f;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Rubik', 'Segoe UI', Arial, sans-serif;
+    }
+
+    #game-container {
+      position: relative;
+      width: 480px;
+      height: 720px;
+    }
+
+    canvas {
+      display: block;
+      position: absolute;
+      top: 0; left: 0;
+      cursor: default;
+      touch-action: none;
+    }
+
+    #ui-overlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 480px; height: 720px;
+      pointer-events: none;
+      transform-origin: top left;
+    }
+
+    /* HUD */
+    #hud {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 56px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 14px;
+      background: rgba(0, 0, 20, 0.88);
+      border-bottom: 1.5px solid rgba(46,196,182,0.3);
+    }
+    .hud-block { text-align: center; min-width: 76px; }
+    .hud-label { color: #556; font-size: 0.67rem; text-transform: uppercase; letter-spacing: 1.5px; }
+    .hud-value { font-size: 1.38rem; font-weight: 800; }
+    #score-val { color: #ffd700; }
+    #wave-val  { color: #2ec4b6; }
+    #lives-val { color: #ff6b6b; letter-spacing: 2px; font-size: 1.2rem; }
+
+    .hud-icon-btns {
+      display: flex;
+      gap: 6px;
+      pointer-events: all;
+    }
+    .hud-btn {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.11);
+      color: #778;
+      font-size: 1rem;
+      width: 34px; height: 34px;
+      border-radius: 8px;
+      cursor: pointer;
+      pointer-events: all;
+      transition: all 0.15s;
+      font-family: 'Rubik', Arial, sans-serif;
+      display: flex; align-items: center; justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .hud-btn:hover, .hud-btn:active { background: rgba(255,255,255,0.16); color: #fff; }
+    .hud-btn.muted { color: #444; border-color: rgba(200,80,80,0.3); background: rgba(200,80,80,0.06); }
+    .hud-btn.paused { color: #2ec4b6; border-color: rgba(46,196,182,0.5); background: rgba(46,196,182,0.12); }
+
+    /* Question */
+    #question-display {
+      position: absolute;
+      bottom: 145px;
+      left: 0; right: 0;
+      text-align: center;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+    #question-display.visible { opacity: 1; }
+    #question-text {
+      font-size: 2.2rem;
+      font-weight: 900;
+      color: #fff;
+      text-shadow: 0 0 22px rgba(46,196,182,0.9), 0 2px 6px rgba(0,0,0,0.95);
+      background: rgba(0,0,22,0.72);
+      display: inline-block;
+      padding: 8px 24px;
+      border-radius: 10px;
+      border: 1px solid rgba(46,196,182,0.32);
+      direction: ltr;
+      unicode-bidi: plaintext;
+    }
+    #question-hint {
+      font-size: 0.78rem;
+      color: #8ab;
+      margin-top: 4px;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+    }
+
+    /* Miss feedback */
+    #miss-feedback {
+      position: absolute;
+      top: 38%;
+      left: 0; right: 0;
+      text-align: center;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.12s;
+      color: #ff4444;
+      font-size: 1.1rem;
+      font-weight: 700;
+      text-shadow: 0 0 12px rgba(255,68,68,0.7);
+    }
+    #miss-feedback.visible { opacity: 1; }
+
+    /* Power-up banner */
+    #power-banner {
+      position: absolute;
+      top: 18%;
+      left: 0; right: 0;
+      text-align: center;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.35s;
+    }
+    #power-banner.visible { opacity: 1; }
+    #power-banner-inner {
+      display: inline-block;
+      padding: 9px 26px;
+      border-radius: 12px;
+      font-size: 1.35rem;
+      font-weight: 800;
+      background: rgba(0,0,0,0.6);
+      border: 2px solid #fff;
+      letter-spacing: 1px;
+      animation: alertPulse 0.6s ease-in-out infinite alternate;
+    }
+
+    /* Missile alert */
+    #missile-alert {
+      position: absolute;
+      top: 42%;
+      left: 0; right: 0;
+      text-align: center;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    #missile-alert.visible { opacity: 1; }
+    #missile-alert-inner {
+      display: inline-block;
+      color: #ff4444;
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-shadow: 0 0 18px rgba(255,60,60,0.85);
+      animation: alertPulse 0.7s ease-in-out infinite alternate;
+    }
+    @keyframes alertPulse {
+      from { opacity: 0.55; transform: scale(0.97); }
+      to   { opacity: 1.0;  transform: scale(1.03); }
+    }
+    /* Laser button — circular, sits below the vertical energy bar */
+    #laser-btn-wrap {
+      position: absolute;
+      left: 3px;
+      top: 65.5%;
+      pointer-events: auto;
+      z-index: 10;
+    }
+    #laser-btn {
+      background: radial-gradient(circle at 40% 35%, #002040 0%, #00060f 100%);
+      border: 2px solid #112233;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      font-size: 1.35rem;
+      padding: 0;
+      cursor: not-allowed;
+      opacity: 0.3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 0 6px rgba(0,80,160,0.4);
+      transition: opacity 0.25s, border-color 0.25s;
+    }
+    #laser-btn.ready {
+      opacity: 1;
+      cursor: pointer;
+      border-color: #00ccff;
+      background: radial-gradient(circle at 40% 35%, #003366 0%, #001122 100%);
+      animation: laserPulse 0.5s ease-in-out infinite alternate;
+    }
+    @keyframes laserPulse {
+      from { box-shadow: 0 0 8px rgba(0,180,255,0.55), inset 0 0 8px rgba(0,100,200,0.3); }
+      to   { box-shadow: 0 0 22px rgba(0,210,255,0.95), 0 0 44px rgba(0,140,255,0.45), inset 0 0 12px rgba(0,180,255,0.5); }
+    }
+
+    /* Power cards — right side of screen */
+    #card-slots {
+      position: absolute;
+      right: 3px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      pointer-events: auto;
+      z-index: 10;
+    }
+    .card-slot {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      border: 2px solid var(--card-col, #888);
+      background: rgba(10,10,20,0.75);
+      display: none; /* hidden until card is collected */
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      color: white;
+      cursor: pointer;
+      transition: transform 0.1s;
+      animation: cardReady 0.7s ease-in-out infinite alternate;
+    }
+    .card-slot.has-card {
+      display: flex;
+      box-shadow: 0 0 10px var(--card-col, #888), inset 0 0 6px rgba(255,255,255,0.08);
+    }
+    .card-slot.has-card:hover  { transform: scale(1.12); }
+    .card-slot.has-card:active { transform: scale(0.95); }
+    .card-slot.swap-dim {
+      opacity: 0.45;
+      cursor: not-allowed;
+      animation: none;
+      box-shadow: none;
+    }
+    @keyframes cardReady {
+      from { box-shadow: 0 0 6px var(--card-col, #888); }
+      to   { box-shadow: 0 0 18px var(--card-col, #888), 0 0 32px color-mix(in srgb, var(--card-col, #888) 50%, transparent); }
+    }
+
+    /* Level-up banner */
+    #level-up-banner {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.7);
+      background: rgba(4, 16, 24, 0.97);
+      border: 2px solid #2ec4b6;
+      box-shadow: 0 0 40px rgba(46,196,182,0.2), inset 0 0 24px rgba(46,196,182,0.04);
+      border-radius: 16px;
+      padding: 20px 42px;
+      color: #2ec4b6;
+      font-size: 1.6rem;
+      font-weight: 800;
+      text-align: center;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      white-space: nowrap;
+    }
+    #level-up-banner.visible {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+    #level-up-sub {
+      font-size: 0.9rem;
+      color: #778;
+      margin-top: 5px;
+      font-weight: 400;
+    }
+
+    /* Pause overlay */
+    #pause-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(1, 2, 20, 0.92);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      pointer-events: all;
+      z-index: 20;
+    }
+    #pause-overlay.hidden { display: none; }
+    #pause-overlay .pause-icon {
+      font-size: 3.2rem;
+      line-height: 1;
+      color: #2ec4b6;
+      text-shadow: 0 0 28px rgba(46,196,182,0.6);
+    }
+    #pause-overlay h2 {
+      font-size: 2.1rem;
+      font-weight: 900;
+      color: #fff;
+    }
+    #pause-overlay p {
+      font-size: 0.88rem;
+      color: #556;
+    }
+    #btn-resume {
+      margin-top: 8px;
+      padding: 12px 40px;
+      border-radius: 10px;
+      border: 2px solid #2ec4b6;
+      background: rgba(46,196,182,0.1);
+      color: #2ec4b6;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      pointer-events: all;
+      font-family: 'Rubik', Arial, sans-serif;
+      transition: all 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #btn-resume:hover, #btn-resume:active { background: rgba(46,196,182,0.22); }
+    #btn-menu {
+      padding: 9px 28px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.05);
+      color: #778;
+      font-size: 0.92rem;
+      font-weight: 600;
+      cursor: pointer;
+      pointer-events: all;
+      font-family: 'Rubik', Arial, sans-serif;
+      transition: all 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #btn-menu:hover, #btn-menu:active { background: rgba(255,255,255,0.12); color: #fff; }
+    #btn-gameover-menu {
+      padding: 9px 28px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.05);
+      color: #778;
+      font-size: 0.92rem;
+      font-weight: 600;
+      cursor: pointer;
+      pointer-events: all;
+      font-family: 'Rubik', Arial, sans-serif;
+      transition: all 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #btn-gameover-menu:hover, #btn-gameover-menu:active { background: rgba(255,255,255,0.12); color: #fff; }
+
+    /* Screens */
+    .screen {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(2, 3, 20, 0.94);
+      pointer-events: all;
+      gap: 15px;
+      padding: 30px 22px;
+    }
+    #screen-start {
+      background:
+        linear-gradient(to bottom, rgba(2,3,20,0.35) 0%, rgba(2,3,20,0.72) 50%, rgba(2,3,20,0.97) 100%),
+        url('./bg-city.png') center top / cover no-repeat;
+      justify-content: space-between;
+      padding-top: 150px;
+      padding-bottom: 24px;
+      gap: 0;
+    }
+    #game-logo {
+      width: clamp(260px, 72%, 360px);
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      pointer-events: none;
+      mix-blend-mode: screen;
+    }
+    .start-mid {
+      position: relative;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      width: 100%;
+    }
+    #screen-start p {
+      font-size: clamp(0.9rem, 3vw, 1.05rem);
+      color: #dde;
+      max-width: 360px;
+      text-align: center;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+      line-height: 1.55;
+    }
+    #screen-start .diff-label {
+      color: #c8dde8;
+      font-size: clamp(0.85rem, 3vw, 1.05rem);
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.7);
+    }
+    .screen.hidden { display: none; }
+    .screen h1 {
+      font-size: 2.25rem;
+      font-weight: 900;
+      color: #fff;
+      text-align: center;
+      line-height: 1.15;
+      text-shadow: 0 0 28px rgba(46,196,182,0.45);
+    }
+    .screen h1 em { color: #2ec4b6; font-style: normal; }
+    .screen h2 { font-size: 1.95rem; font-weight: 800; text-align: center; }
+    .screen h2.lose { color: #ff6b6b; text-shadow: 0 0 20px rgba(255,107,107,0.4); }
+    .screen h2.win  { color: #ffd700; text-shadow: 0 0 20px rgba(255,215,0,0.4); }
+    .screen > p {
+      font-size: 0.9rem;
+      color: #778;
+      text-align: center;
+      max-width: 285px;
+      line-height: 1.58;
+    }
+    .final-score { font-size: 1.65rem; font-weight: 700; color: #ffd700; }
+
+    .diff-label {
+      font-size: 0.7rem;
+      color: #556;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+    .level-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      width: 100%;
+      max-width: 320px;
+    }
+    .level-btn {
+      padding: 13px 10px;
+      border-radius: 10px;
+      border: 1.5px solid #162030;
+      background: #05101a;
+      color: #889;
+      font-size: clamp(0.88rem, 3vw, 1.0rem);
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      line-height: 1.5;
+      pointer-events: all;
+      transition: all 0.15s;
+      font-family: 'Rubik', Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .level-btn small { display: block; font-size: 0.69rem; color: #445; font-weight: 400; }
+    .level-btn.active, .level-btn:hover {
+      border-color: #2ec4b6;
+      background: #040e14;
+      color: #fff;
+    }
+    .level-btn.active small { color: #2ec4b6; }
+
+
+    .btn-primary {
+      padding: 14px 44px;
+      border-radius: 12px;
+      border: none;
+      background: linear-gradient(135deg, #28b2a4, #00828f);
+      color: #fff;
+      font-size: 1.2rem;
+      font-weight: 800;
+      cursor: pointer;
+      pointer-events: all;
+      letter-spacing: 0.5px;
+      transition: transform 0.1s, box-shadow 0.1s;
+      box-shadow: 0 4px 22px rgba(46,196,182,0.32);
+      font-family: 'Rubik', Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-primary:hover { transform: scale(1.05); box-shadow: 0 6px 28px rgba(46,196,182,0.5); }
+    .btn-primary:active { transform: scale(0.97); }
+  </style>
+</head>
+<body>
+
+<div id="game-container">
+  <canvas id="gameCanvas" width="480" height="720"></canvas>
+
+  <div id="ui-overlay">
+
+    <!-- HUD -->
+    <div id="hud">
+      <div class="hud-block">
+        <div class="hud-label">ניקוד</div>
+        <div class="hud-value" id="score-val" data-hj-allow>0</div>
+      </div>
+      <div class="hud-block">
+        <div class="hud-label">גל</div>
+        <div class="hud-value">
+          <span id="wave-val" data-hj-allow>1</span>
+        </div>
+      </div>
+      <div class="hud-block">
+        <div class="hud-label">חיים</div>
+        <div class="hud-value" id="lives-val" data-hj-allow>❤❤❤</div>
+      </div>
+      <div class="hud-icon-btns">
+        <button class="hud-btn" id="btn-mute" title="השתק">🔊</button>
+        <button class="hud-btn" id="btn-pause" title="השהה (ESC)">⏸</button>
+      </div>
+    </div>
+
+    <!-- Question display -->
+    <div id="question-display">
+      <div id="question-text" data-hj-allow></div>
+      <div id="question-hint" data-hj-allow>לחץ על הסוללה עם התשובה הנכונה</div>
+    </div>
+
+    <!-- Miss feedback -->
+    <div id="miss-feedback">החטאה! נסה סוללה אחרת!</div>
+
+    <!-- Missile alert -->
+    <div id="missile-alert"><div id="missile-alert-inner">⚠ התרעת טילים ⚠</div></div>
+
+    <!-- Power-up banner -->
+    <div id="power-banner"><div id="power-banner-inner"></div></div>
+
+    <!-- Laser strike button -->
+    <div id="laser-btn-wrap">
+      <button id="laser-btn" disabled>⚡</button>
+    </div>
+
+    <!-- Power card slots -->
+    <div id="card-slots">
+      <button class="card-slot" id="card-freeze"        style="--card-col:#00d4ff" onclick="useCard('freeze')"        title="הקפאת טילים ❄️">❄️</button>
+      <button class="card-slot" id="card-hint"          style="--card-col:#ff9900" onclick="useCard('hint')"          title="רמז לסוללה הנכונה 💡">💡</button>
+      <button class="card-slot" id="card-swap_question" style="--card-col:#b044ff" onclick="useCard('swap_question')" title="החלפת שאלה 🔄">🔄</button>
+      <button class="card-slot" id="card-wrong_only"    style="--card-col:#e03060" onclick="useCard('wrong_only')"    title="רק תשובות לא נכונות 🚫">🚫</button>
+      <button class="card-slot" id="card-restock"       style="--card-col:#44dd88" onclick="useCard('restock')"       title="הצטיידות מחדש 🔋">🔋</button>
+      <button class="card-slot" id="card-blast"         style="--card-col:#ff6600" onclick="useCard('blast')"         title="פיצוץ שטח 💥">💥</button>
+    </div>
+
+    <!-- Level-up banner -->
+    <div id="level-up-banner">
+      <div id="level-up-text">הגל הושלם!</div>
+      <div id="level-up-sub"></div>
+    </div>
+
+    <!-- Pause overlay -->
+    <div id="pause-overlay" class="hidden">
+      <div class="pause-icon">⏸</div>
+      <h2>משחק מושהה</h2>
+      <p>ESC או לחיצה להמשך</p>
+      <button id="btn-resume">▶  המשך</button>
+      <button id="btn-menu">☰  תפריט ראשי</button>
+    </div>
+
+    <!-- Start screen -->
+    <div class="screen" id="screen-start">
+      <img id="game-logo" src="./logo.png" alt="כיפת ברזל: עושים חשבון עם איראן">
+      <div class="start-mid">
+        <p>טיל מתקרב! פתרו את שאלת המתמטיקה ולחצו על הסוללה עם התשובה הנכונה כדי ליירט אותו</p>
+        <div class="diff-label">בחרו רמת קושי</div>
+        <div class="level-grid">
+          <button class="level-btn active" data-level="1">
+            מתחיל<small>חיבור וחיסור עד 50</small>
+          </button>
+          <button class="level-btn" data-level="2">
+            מתקדם<small>חיבור וחיסור עד 200</small>
+          </button>
+          <button class="level-btn" data-level="3">
+            קשה<small>כפל וחילוק 1–20</small>
+          </button>
+          <button class="level-btn" data-level="4">
+            טירוף<small>כפל וחילוק 1–50</small>
+          </button>
+        </div>
+      </div>
+      <button class="btn-primary" id="btn-start">▶  התחל משחק</button>
+      <p style="font-size:0.68rem;color:#556;text-align:center;line-height:1.5;margin-top:6px;">המשחק תוכנן על ידי ליבי ונעמי קפלן מבית הספר כצנלסון גבעתיים</p>
+    </div>
+
+    <!-- Game over screen -->
+    <div class="screen hidden" id="screen-gameover">
+      <h2 class="lose">המשחק נגמר</h2>
+      <p>הטילים עברו... המשיכו להתאמן ונסו שוב!</p>
+      <div class="final-score" id="gameover-score">ניקוד: 0</div>
+      <button class="btn-primary" id="btn-replay">↺  נסה שוב</button>
+      <button id="btn-gameover-menu">☰  תפריט ראשי</button>
+    </div>
+
+    <!-- Win screen (kept for future use) -->
+    <div class="screen hidden" id="screen-win">
+      <h2 class="win">🏆 העיר ניצלה!</h2>
+      <p>מדהים! הגנתם על העיר!</p>
+      <div class="final-score" id="win-score">ניקוד: 0</div>
+      <button class="btn-primary" id="btn-replay-win">↺  שחק שוב</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  CONFIG
+// ═══════════════════════════════════════════════════════════
+const W = 480, H = 720;
+const GROUND_Y     = H - 55;
+const TRUCK_Y      = H - 72;
+const TRUCK_XS     = [W * 0.165, W * 0.50, W * 0.835];
+const TRUCK_HIT_HW = 60;
+const TRUCK_HIT_HH = 54;
+const STOCK_MAX    = 5;
+const Q_TRIGGER_Y  = H * 0.22; // enemy missile y that shows question (high up = more time)
+const SLOW_SPEED   = 0.28;     // px/frame while question is showing
+const BASE_SPEED   = 1.10;     // px/frame at 60fps, wave 1
+const BLAST_RADIUS = 130;      // px — splash kill radius when blast card is active
+
+// Special missile types (random specials — splitter is separate, wave-based)
+const SPECIAL_TYPES = {
+  double_score:  { col: '#ffd700', shadow: '#b8860b', label: 'ניקוד כפול ל-20 שניות ★'      },
+  extra_life:    { col: '#ff69b4', shadow: '#c01060', label: 'חיים נוספים ❤'                },
+  freeze:        { col: '#00d4ff', shadow: '#0077aa', label: 'כרטיס הקפאת טילים ❄️'         },
+  shield:        { col: '#d0d0e0', shadow: '#888899', label: 'מגן מפגיעה אחת 🛡'            },
+  hint:          { col: '#ff9900', shadow: '#994400', label: 'כרטיס רמז 💡'                 },
+  swap_question: { col: '#b044ff', shadow: '#6600cc', label: 'כרטיס החלפת שאלה 🔄'         },
+  wrong_only:    { col: '#e03060', shadow: '#880022', label: 'כרטיס רק תשובות לא נכונות 🚫' },
+  restock:       { col: '#44dd88', shadow: '#1a7740', label: 'הצטיידות מחדש 🔋'              },
+  blast:         { col: '#ff6600', shadow: '#882200', label: 'כרטיס פיצוץ שטח 💥'           },
+  joker:         { col: '#ffffff', shadow: '#999999', label: '🃏 ג\'וקר — כל הכוחות!'       },
+};
+
+// Infinite wave config — escalates smoothly over 40 waves then stays maxed
+function getWaveCfg(w) {
+  const t = Math.min(w - 1, 39) / 39; // 0→1 over waves 1-40, then stable
+  return {
+    n:   Math.round(4 + t * 11),                      // 4 → 15 missiles
+    ms:  Math.max(1100, Math.round(3800 - t * 2700)), // 3800 → 1100ms spawn interval
+    spd: +(0.80 + t * 2.70).toFixed(3),               // 0.80 → 3.50 speed
+  };
+}
+
+// ═══════════════════════════════════════════════════════════
+//  CANVAS
+// ═══════════════════════════════════════════════════════════
+const canvas  = document.getElementById('gameCanvas');
+const ctx     = canvas.getContext('2d');
+const overlay = document.getElementById('ui-overlay');
+
+function resize() {
+  const s = Math.min(window.innerWidth / W, window.innerHeight / H);
+  const dw = Math.floor(W * s), dh = Math.floor(H * s);
+  const c = document.getElementById('game-container');
+  c.style.width  = dw + 'px';
+  c.style.height = dh + 'px';
+  canvas.style.width  = dw + 'px';
+  canvas.style.height = dh + 'px';
+  overlay.style.transform = `scale(${s})`;
+}
+window.addEventListener('resize', resize);
+resize();
+
+// ═══════════════════════════════════════════════════════════
+//  GAME STATE
+// ═══════════════════════════════════════════════════════════
+let gameState   = 'START'; // START | PLAYING | QUESTION | PAUSED | GAME_OVER | WIN
+let pausedState = null;    // state before pause
+let muted       = false;
+let score       = 0;
+let lives       = 3;
+let wave        = 1;
+let minMathLvl  = 1;
+
+let totalMissiles   = 0;
+let spawned         = 0;
+let resolved        = 0;
+let spawnTimer      = 0;
+let waveActive      = false;
+let questionStartTime = 0; // for speed-based scoring
+
+// Special missile effects state
+let doubleScoreTimer = 0;   // ms remaining
+let freezeTimer      = 0;   // ms remaining
+let hintTimer        = 0;   // ms remaining
+let wrongOnlyTimer   = 0;   // ms remaining — wrong-answer batteries blocked
+let blastTimer       = 0;   // ms remaining — interceptors explode in splash radius
+let shieldActive     = false;
+let specialSpawnTimer = 25000; // ms until next special missile spawn
+let waveHasSplitter   = false; // whether the current wave ends with the fat splitter
+
+// ── Streak & Energy ──
+let streak     = 0;
+let energy     = 0;
+const MAX_ENERGY = 100;
+let lasers     = []; // [{x1,y1,x2,y2,alpha,elapsed}]
+let shockwaves = []; // [{x,y,r,maxR,alpha}] — expanding blast rings
+
+// ── Power cards ──
+const CARD_TYPES = ['freeze', 'hint', 'swap_question', 'wrong_only', 'restock', 'blast'];
+const cards = { freeze: false, hint: false, swap_question: false, wrong_only: false, restock: false, blast: false };
+
+let missiles        = [];
+let questionedMissile = null;
+let interceptors    = [];
+let explosions      = [];
+let floatTexts      = [];
+let damageFlash     = 0;
+
+let trucks = [];
+let hoveredTruck = null;
+
+// ═══════════════════════════════════════════════════════════
+//  SCENE DATA
+// ═══════════════════════════════════════════════════════════
+const bgGame = new Image();
+bgGame.src = './bg-game.png';
+
+const cloudsImg = new Image();
+cloudsImg.src = './clouds.png';
+
+const STARS = Array.from({length: 60}, () => ({
+  x: Math.random() * W,
+  y: Math.random() * H * 0.55,
+  r: Math.random() * 1.3 + 0.25,
+  phase: Math.random() * Math.PI * 2,
+}));
+
+// Parallax cloud layers: sprite 0 = top cloud, sprite 1 = bottom cloud
+const CLOUDS = [
+  { sprite: 0, x: W * 0.05, y: H * 0.04, scale: 0.82, speed: 0.20, alpha: 0.50 },
+  { sprite: 1, x: W * 0.55, y: H * 0.13, scale: 0.52, speed: 0.34, alpha: 0.40 },
+  { sprite: 0, x: W * 1.10, y: H * 0.22, scale: 0.36, speed: 0.52, alpha: 0.30 },
+  { sprite: 1, x: W * 0.25, y: H * 0.19, scale: 0.67, speed: 0.26, alpha: 0.44 },
+  { sprite: 0, x: W * 0.78, y: H * 0.09, scale: 0.44, speed: 0.62, alpha: 0.28 },
+];
+
+// ═══════════════════════════════════════════════════════════
+//  MATH ENGINE
+// ═══════════════════════════════════════════════════════════
+function genQuestion(lvl) {
+  // scale: 0 at wave 1 → 1 at wave 11+. Only ONE operand scales.
+  const scale = Math.min((wave - 1) / 10, 1);
+  let a, b, op, ans;
+
+  // flip: randomly decide which operand carries the scale (varies question variety)
+  const flip = Math.random() < 0.5;
+
+  if (lvl === 1) {
+    // מתחיל: חיבור/חיסור עד 50. one operand scales 5→25, other stays full range
+    const mx  = Math.round(5 + scale * 20);           // scaled side: 5 → 25
+    const mxF = 40;                                   // fixed side
+    op = Math.random() < 0.5 ? '+' : '−';
+    if (op === '+') {
+      a = flip ? ri(1, mx)  : ri(1, mxF);
+      b = flip ? ri(1, mxF) : ri(1, mx);
+      b = Math.min(b, Math.max(1, 50 - a));
+      ans = a + b;
+    } else {
+      const big = flip ? ri(mx + 1, 50) : ri(mxF + 1, 50);
+      const sml = flip ? ri(1, mx)      : ri(1, mxF);
+      a = Math.max(big, sml + 1); b = Math.min(sml, a - 1);
+      ans = a - b;
+    }
+
+  } else if (lvl === 2) {
+    // מתקדם: חיבור/חיסור עד 200. one operand scales 10→80
+    const mx  = Math.round(10 + scale * 70);          // scaled: 10 → 80
+    const mxF = 170;                                  // fixed
+    op = Math.random() < 0.5 ? '+' : '−';
+    if (op === '+') {
+      a = flip ? ri(5, mx)   : ri(10, mxF);
+      b = flip ? ri(10, mxF) : ri(5, mx);
+      b = Math.min(b, Math.max(5, 200 - a));
+      ans = a + b;
+    } else {
+      const big = flip ? ri(mx + 5, 198)  : ri(mxF + 5, 198);
+      const sml = flip ? ri(5, mx)        : ri(5, mxF);
+      a = Math.max(big, sml + 5); b = Math.min(sml, a - 5);
+      ans = a - b;
+    }
+
+  } else if (lvl === 3) {
+    // קשה: כפל/חילוק 1–20.
+    // Multiplication: both factors scale, one at full rate, one at half rate (flip picks which)
+    const mfFull = Math.round(5 + scale * 15);        // 5 → 20
+    const mfHalf = Math.round(5 + scale * 7.5);       // 5 → 12 (half effect)
+    if (Math.random() < 0.5) {
+      op = '×';
+      a = ri(2, flip ? mfFull : mfHalf);
+      b = ri(2, flip ? mfHalf : mfFull);
+      ans = a * b;
+    } else {
+      const mfQ = flip ? mfFull : mfHalf;
+      const mfD = flip ? mfHalf : mfFull;
+      ans = ri(1, mfQ); b = ri(2, mfD); a = ans * b; op = '÷';
+    }
+
+  } else {
+    // טירוף: כפל/חילוק עד 50.
+    // Multiplication: both factors scale, one at full rate, one at half rate
+    const mfFull = Math.round(10 + scale * 40);       // 10 → 50
+    const mfHalf = Math.round(10 + scale * 20);       // 10 → 30 (half effect)
+    if (Math.random() < 0.5) {
+      op = '×';
+      do {
+        a = ri(2, flip ? mfFull : mfHalf);
+        b = ri(2, flip ? mfHalf : mfFull);
+      } while (a * b > 999);
+      ans = a * b;
+    } else {
+      const mfQ = flip ? mfFull : mfHalf;
+      const mfD = flip ? mfHalf : mfFull;
+      do { ans = ri(2, mfQ); b = ri(2, mfD); a = ans * b; } while (a > 999);
+      op = '÷';
+    }
+  }
+  return { text: `${a} ${op} ${b} = ?`, ans };
+}
+
+function wrongAnswers(correct) {
+  const set = new Set();
+  const deltas = [ri(1,4), -ri(1,4), ri(5,11), -ri(5,11), ri(12,20), -ri(12,20)];
+  for (const d of deltas) {
+    const w = correct + d;
+    if (w !== correct && w > 0 && !set.has(w)) set.add(w);
+    if (set.size >= 2) break;
+  }
+  let i = 1;
+  while (set.size < 2) { if (i !== correct && i > 0) set.add(i); i++; }
+  return [...set];
+}
+
+// ═══════════════════════════════════════════════════════════
+//  TRUCKS
+// ═══════════════════════════════════════════════════════════
+function initTrucks() {
+  trucks = TRUCK_XS.map((x, i) => ({
+    i, x, y: TRUCK_Y,
+    ansVal: null,
+    stock: STOCK_MAX,
+    correct: false,
+    shakeT: 0,
+    flashT: 0,
+    orient: ['left', 'front', 'right'][i],  // left=angled left, front=straight up, right=mirrored
+  }));
+}
+
+function restockTrucks() {
+  trucks.forEach(t => { t.stock = STOCK_MAX; t.ansVal = null; t.correct = false; });
+}
+
+function assignAnswers(question) {
+  const wrongs = wrongAnswers(question.ans);
+  const vals = shuffle([question.ans, ...wrongs]);
+  trucks.forEach((t, i) => {
+    t.ansVal  = vals[i];
+    t.correct = (vals[i] === question.ans);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+//  ENTITY FACTORIES
+// ═══════════════════════════════════════════════════════════
+let midCtr = 0;
+function mkMissile() {
+  return {
+    id: midCtr++,
+    x: ri(65, W-65),
+    y: -30,
+    tx: ri(65, W-65),
+    speed: BASE_SPEED * getWaveCfg(wave).spd,
+    trail: [],
+    active: true,
+    qTriggered: false,
+    question: null,
+    wrongFires: 0,
+  };
+}
+
+function mkSpecialMissile() {
+  // Joker: very rare (4%), only from wave 4 onward
+  let type;
+  if (wave >= 4 && Math.random() < 0.04) {
+    type = 'joker';
+  } else {
+    const keys = Object.keys(SPECIAL_TYPES).filter(k => k !== 'joker');
+    type = keys[ri(0, keys.length - 1)];
+  }
+  const m = mkMissile();
+  m.special     = true;
+  m.specialType = type;
+  m.speed       = BASE_SPEED * getWaveCfg(wave).spd * (type === 'joker' ? 0.48 : 0.62);
+  return m;
+}
+
+// Fat splitter missile — spawns as the last missile in each wave
+function mkSplitter() {
+  const m = mkMissile();
+  m.splitter = true;
+  m.speed    = BASE_SPEED * getWaveCfg(wave).spd * 0.42; // extra slow and menacing
+  return m;
+}
+
+// Spawn 2 regular missiles from the intercept point — counted in the wave total
+function spawnSplitMissiles(ox, oy) {
+  for (let i = 0; i < 2; i++) {
+    missiles.push({
+      id: midCtr++,
+      x:  ox + (i === 0 ? -35 : 35),
+      y:  oy,
+      tx: ri(65, W - 65),
+      speed: BASE_SPEED * getWaveCfg(wave).spd * 1.4,
+      trail: [],
+      active: true,
+      qTriggered: false,
+      question: null,
+      wrongFires: 0,
+    });
+  }
+  totalMissiles += 2;
+  spawned       += 2;
+}
+
+function mkInterceptor(tx, ty, target, correct, srcX) {
+  const dx = target.x - tx, dy = target.y - ty;
+  const dist = Math.hypot(dx, dy) || 1;
+  const spd = 7.5;
+  return {
+    x: tx, y: ty - 22,
+    vx: dx/dist * spd,
+    vy: dy/dist * spd,
+    trail: [],
+    active: true,
+    correct,
+    target,
+    srcX: srcX ?? tx, // source truck x — for showing label above correct battery
+    deflectT: 0,
+    deflectDir: Math.random() > 0.5 ? 1 : -1,
+  };
+}
+
+function mkExplosion(x, y, big) {
+  const n = big ? 22 : 10;
+  const cols = ['#ff9f1c','#e63946','#ffffff','#ffbf69','#ffd700','#ff4500'];
+  return {
+    x, y,
+    frame: 0,
+    dur: big ? 48 : 28,
+    maxR: big ? 52 : 26,
+    alpha: 1,
+    active: true,
+    particles: Array.from({length: n}, () => {
+      const a = Math.random() * Math.PI * 2;
+      const s = Math.random() * (big ? 4.5 : 2.5) + 0.8;
+      return {
+        x, y,
+        vx: Math.cos(a)*s, vy: Math.sin(a)*s - (big?1.8:0.6),
+        r: Math.random() * (big?5:3) + 1.5,
+        col: cols[ri(0, cols.length-1)],
+        alpha: 1,
+        decay: 0.020 + Math.random()*0.012,
+      };
+    }),
+  };
+}
+
+function addFloat(text, x, y, col) {
+  floatTexts.push({text, x, y, vy:-1.3, alpha:1, col: col||'#ffd700'});
+}
+
+// ═══════════════════════════════════════════════════════════
+//  AUDIO
+// ═══════════════════════════════════════════════════════════
+let AC = null;
+function unlockAudio() {
+  if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
+}
+function beep(type) {
+  if (!AC || muted) return;
+  const osc = AC.createOscillator(), g = AC.createGain();
+  osc.connect(g); g.connect(AC.destination);
+  const t = AC.currentTime;
+  if (type === 'correct') {
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(440, t);
+    osc.frequency.exponentialRampToValueAtTime(880, t+0.15);
+    g.gain.setValueAtTime(0.22, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t+0.35);
+    osc.start(t); osc.stop(t+0.35);
+  } else if (type === 'wrong') {
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(280, t);
+    osc.frequency.exponentialRampToValueAtTime(90, t+0.28);
+    g.gain.setValueAtTime(0.15, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t+0.32);
+    osc.start(t); osc.stop(t+0.32);
+  } else if (type === 'boom') {
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(200, t);
+    osc.frequency.exponentialRampToValueAtTime(22, t+0.5);
+    g.gain.setValueAtTime(0.35, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t+0.55);
+    osc.start(t); osc.stop(t+0.55);
+  } else if (type === 'hit') {
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(75, t);
+    g.gain.setValueAtTime(0.4, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t+0.45);
+    osc.start(t); osc.stop(t+0.45);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  PAUSE
+// ═══════════════════════════════════════════════════════════
+function togglePause() {
+  if (gameState === 'PAUSED') {
+    gameState = pausedState;
+    pausedState = null;
+    document.getElementById('pause-overlay').classList.add('hidden');
+    document.getElementById('btn-pause').classList.remove('paused');
+    if (gameState === 'QUESTION' && questionedMissile?.question) {
+      showQ(questionedMissile.question.text);
+    }
+  } else if (gameState === 'PLAYING' || gameState === 'QUESTION') {
+    pausedState = gameState;
+    gameState = 'PAUSED';
+    hideQ(); // hide to prevent cheating
+    document.getElementById('pause-overlay').classList.remove('hidden');
+    document.getElementById('btn-pause').classList.add('paused');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  GAME LOOP
+// ═══════════════════════════════════════════════════════════
+let lastTs = 0;
+function loop(ts) {
+  const dt = Math.min(ts - lastTs, 50);
+  lastTs = ts;
+  update(dt);
+  draw(dt);
+  requestAnimationFrame(loop);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  UPDATE
+// ═══════════════════════════════════════════════════════════
+function update(dt) {
+  if (gameState === 'PAUSED') return;
+
+  if (damageFlash > 0) damageFlash -= dt;
+  trucks.forEach(t => {
+    if (t.shakeT > 0) t.shakeT -= dt;
+    if (t.flashT > 0) t.flashT -= dt;
+  });
+
+  // Tick effect timers
+  if (doubleScoreTimer > 0) doubleScoreTimer -= dt;
+  if (freezeTimer      > 0) freezeTimer      -= dt;
+  if (hintTimer        > 0) hintTimer         -= dt;
+  if (wrongOnlyTimer   > 0) wrongOnlyTimer   -= dt;
+  if (blastTimer       > 0) blastTimer       -= dt;
+
+  if (waveActive && (gameState === 'PLAYING' || gameState === 'QUESTION')) {
+    const cfg = getWaveCfg(wave);
+    // Regular missile spawn — last missile of each wave is always the fat splitter
+    const regularCount = missiles.filter(m => !m.mini && !m.special && !m.splitter).length;
+    if (spawned < totalMissiles && regularCount < 3) {
+      spawnTimer -= dt;
+      if (spawnTimer <= 0) {
+        const isLast = waveHasSplitter && (spawned === totalMissiles - 1);
+        missiles.push(isLast ? mkSplitter() : mkMissile());
+        spawned++;
+        spawnTimer = cfg.ms;
+      }
+    }
+    // Special missile spawn (independent of wave count)
+    specialSpawnTimer -= dt;
+    if (specialSpawnTimer <= 0) {
+      const hasSpecial = missiles.some(m => m.special);
+      if (!hasSpecial) missiles.push(mkSpecialMissile());
+      specialSpawnTimer = ri(14000, 26000); // next special in 14-26 seconds
+    }
+  }
+
+  missiles.forEach(m => { if (m.active) updateMissile(m, dt); });
+  missiles = missiles.filter(m => m.active);
+
+  interceptors.forEach(ic => updateInterceptor(ic, dt));
+  interceptors = interceptors.filter(ic => ic.active);
+
+  explosions.forEach(ex => updateExplosion(ex, dt));
+  explosions = explosions.filter(ex => ex.active);
+
+  floatTexts.forEach(f => { f.y += f.vy * (dt/16.67); f.alpha -= 0.017*(dt/16.67); });
+  floatTexts = floatTexts.filter(f => f.alpha > 0);
+
+  lasers.forEach(l => { l.elapsed += dt; l.alpha = Math.max(0, 1 - l.elapsed / 700); });
+  lasers = lasers.filter(l => l.alpha > 0);
+
+  // Shockwave rings expand and fade
+  shockwaves.forEach(sw => {
+    sw.r += (sw.maxR - sw.r) * 0.09 * (dt / 16.67);
+    sw.alpha -= 0.032 * (dt / 16.67);
+  });
+  shockwaves = shockwaves.filter(sw => sw.alpha > 0);
+
+  // Show missile alert only for regular missiles
+  const regularMissiles = missiles.filter(m => !m.mini && !m.special);
+  const showAlert = waveActive && regularMissiles.length === 0 && spawned < totalMissiles && gameState !== 'PAUSED';
+  document.getElementById('missile-alert').classList.toggle('visible', showAlert);
+
+  // Wave complete: wait for both regular AND special missiles to finish (mini are autonomous)
+  const nonMiniMissiles = missiles.filter(m => !m.mini);
+  if (waveActive && spawned === totalMissiles && resolved === totalMissiles && nonMiniMissiles.length === 0) {
+    waveActive = false;
+    onWaveComplete();
+  }
+}
+
+function updateMissile(m, dt) {
+  const isQ = (m === questionedMissile);
+  const freezeMult = (freezeTimer > 0 && !m.mini) ? 0.45 : 1;
+  // Non-questioned missiles slow to 68% when a question is active — gives player time to answer
+  const spd = (isQ ? SLOW_SPEED : (gameState === 'QUESTION' ? m.speed * 0.68 : m.speed)) * freezeMult;
+  const dx = m.tx - m.x;
+  const dy = GROUND_Y - m.y;
+  const dist = Math.hypot(dx, dy) || 1;
+  const step = spd * (dt / 16.67);
+
+  m.trail.push({x: m.x, y: m.y});
+  if (m.trail.length > 10) m.trail.shift();
+
+  m.x += (dx/dist) * step;
+  m.y += (dy/dist) * step;
+
+  if (!m.qTriggered && m.y >= Q_TRIGGER_Y && questionedMissile === null) {
+    m.qTriggered = true;
+    questionedMissile = m;
+    const q = genQuestion(minMathLvl);
+    m.question = q;
+    assignAnswers(q);
+    showQ(q.text);
+    gameState = 'QUESTION';
+  } else if (!m.qTriggered && m.y >= Q_TRIGGER_Y) {
+    m.qTriggered = true;
+  }
+
+  if (m.y >= GROUND_Y - 12) missileHit(m);
+}
+
+function promoteNextQuestioned() {
+  questionedMissile = null;
+  if (missiles.length === 0) { hideQ(); gameState = 'PLAYING'; return; }
+  const candidates = missiles.filter(m => m.active && m.qTriggered && !m.mini);
+  if (candidates.length > 0) {
+    candidates.sort((a, b) => b.y - a.y);
+    questionedMissile = candidates[0];
+    const q = genQuestion(minMathLvl);
+    questionedMissile.question = q;
+    questionedMissile.wrongFires = 0;
+    assignAnswers(q);
+    showQ(q.text);
+    gameState = 'QUESTION';
+  } else {
+    hideQ();
+    gameState = 'PLAYING';
+  }
+}
+
+function updateInterceptor(ic, dt) {
+  ic.trail.push({x: ic.x, y: ic.y});
+  if (ic.trail.length > 14) ic.trail.shift();
+
+  if (ic.correct) {
+    // Guard: target already destroyed by a sibling interceptor this frame
+    if (!ic.target.active) { ic.active = false; return; }
+    const dx = ic.target.x - ic.x;
+    const dy = ic.target.y - ic.y;
+    const dist = Math.hypot(dx, dy);
+    if (dist < 20) {
+      ic.target.active = false; // mark FIRST — prevents double-count
+      const ex = ic.x, ey = ic.y;
+      explosions.push(mkExplosion(ex, ey, true));
+      beep('boom');
+      onIntercepted(ic.target, ex, ey, ic.srcX);
+      ic.active = false;
+      return;
+    }
+    const spd = 7.5;
+    ic.vx = (dx/dist) * spd;
+    ic.vy = (dy/dist) * spd;
+  } else {
+    ic.deflectT += dt;
+    if (ic.deflectT > 340) {
+      ic.vx += ic.deflectDir * 0.38 * (dt/16.67);
+      ic.vy += 0.12 * (dt/16.67);
+    }
+  }
+
+  ic.x += ic.vx * (dt/16.67);
+  ic.y += ic.vy * (dt/16.67);
+
+  if (ic.y < -50 || ic.y > H+50 || ic.x < -70 || ic.x > W+70) ic.active = false;
+}
+
+function updateExplosion(ex, dt) {
+  ex.frame += dt/16.67;
+  const t = ex.frame / ex.dur;
+  ex.alpha = Math.max(0, 1 - t);
+  if (ex.frame >= ex.dur) { ex.active = false; return; }
+  ex.particles.forEach(p => {
+    p.x += p.vx * (dt/16.67);
+    p.y += p.vy * (dt/16.67);
+    p.vy += 0.11 * (dt/16.67);
+    p.alpha = Math.max(0, p.alpha - p.decay*(dt/16.67));
+    p.r *= 0.984;
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+//  GAME EVENTS
+// ═══════════════════════════════════════════════════════════
+function fireTruck(truck) {
+  if (!questionedMissile?.active) return;
+  truck.flashT = 320;
+  explosions.push(mkExplosion(truck.x, truck.y - 25, false));
+
+  // wrong_only reverses the rules: shoot a WRONG answer to intercept, correct = miss
+  const hitsTarget = wrongOnlyTimer > 0 ? !truck.correct : truck.correct;
+
+  if (hitsTarget) {
+    if (truck.stock <= 0) return;
+    truck.stock--;
+    beep('correct');
+    const ic = mkInterceptor(truck.x, truck.y, questionedMissile, true, truck.x);
+    interceptors.push(ic);
+  } else {
+    if (truck.stock <= 0) return;
+    truck.stock--;
+    beep('wrong');
+    truck.shakeT = 420;
+    streak = 0;
+    questionedMissile.wrongFires++;
+    showMiss();
+    const ic = mkInterceptor(truck.x, truck.y, questionedMissile, false);
+    interceptors.push(ic);
+  }
+}
+
+function onIntercepted(missile, ex, ey, truckX) {
+  const lx = truckX ?? ex;
+
+  // ── Splitter missile intercepted → split into 2 regular missiles ──
+  if (missile.splitter) {
+    let pts = 200 + Math.min(wave * 8, 150);
+    if (doubleScoreTimer > 0) pts *= 2;
+    score += pts;
+    addFloat(`+${pts}`, ex, ey - 10, '#ff5500');
+    showPowerBanner('🔥 מתפצל!', '#ff5500');
+    streak++;
+    if (streak >= 3) addFloat(`🔥×${streak}`, ex, ey - 30, streak >= 7 ? '#ffd700' : '#ff8c00');
+    addEnergy(Math.min(3 + streak * 1.5, 18));
+    resolved++;
+    spawnSplitMissiles(ex, ey);
+    updateHUD();
+    promoteNextQuestioned();
+    return;
+  }
+
+  // ── Other special missile intercepted ──
+  if (missile.special) {
+    let pts = 200 + Math.min(wave * 8, 150);
+    if (doubleScoreTimer > 0) pts *= 2;
+    score += pts;
+    const st = SPECIAL_TYPES[missile.specialType];
+    addFloat(`+${pts}`, ex, ey - 10, st.col);
+    streak++;
+    if (streak >= 3) addFloat(`🔥×${streak}`, ex, ey - 30, streak >= 7 ? '#ffd700' : '#ff8c00');
+    addEnergy(Math.min(3 + streak * 1.5, 18));
+    applySpecialEffect(missile.specialType, lx);
+    triggerBlastSplash(ex, ey);
+    updateHUD();
+    promoteNextQuestioned();
+    return;
+  }
+
+  // ── Mini missile intercepted (shouldn't happen normally but handle it) ──
+  if (missile.mini) {
+    let pts = 60;
+    if (doubleScoreTimer > 0) pts *= 2;
+    score += pts;
+    addFloat(`+${pts}`, ex, ey - 10, '#88ffff');
+    updateHUD();
+    return;
+  }
+
+  // ── Regular missile intercepted ──
+  const elapsed = (performance.now() - questionStartTime) / 1000;
+  let speedLabel, speedBonus, labelCol;
+  if (elapsed < 5) {
+    speedLabel = '⚡ יירוט מהיר!'; speedBonus = 150; labelCol = '#ffd700';
+  } else if (elapsed < 12) {
+    speedLabel = '✓ יירוט טוב';   speedBonus = 80;  labelCol = '#2ec4b6';
+  } else {
+    speedLabel = '⏱ בשניה האחרונה'; speedBonus = 30; labelCol = '#ff9966';
+  }
+  const ftBonus = missile.wrongFires === 0 ? 50 : 0;
+  const wvBonus = Math.min(wave * 8, 200);
+  let pts = speedBonus + ftBonus + wvBonus;
+  if (doubleScoreTimer > 0) pts *= 2;
+  score += pts;
+  addFloat(`+${pts}`, ex, ey - 10, doubleScoreTimer > 0 ? '#ffd700' : labelCol);
+  addFloat(speedLabel, lx, TRUCK_Y - 72, labelCol);
+  streak++;
+  if (streak >= 3) addFloat(`🔥×${streak}`, ex, ey - 30, streak >= 7 ? '#ffd700' : '#ff8c00');
+  addEnergy(Math.min(3 + streak * 1.5, 18));
+  resolved++;
+  triggerBlastSplash(ex, ey);
+  updateHUD();
+  promoteNextQuestioned();
+  // Immediately spawn next missile
+  const regularCount = missiles.filter(m => !m.mini && !m.special).length;
+  if (waveActive && spawned < totalMissiles && regularCount < 3) {
+    missiles.push(mkMissile());
+    spawned++;
+    spawnTimer = getWaveCfg(wave).ms;
+  }
+  if (window.hj) hj('event', `intercept_${elapsed < 5 ? 'fast' : elapsed < 12 ? 'good' : 'last'}`);
+}
+
+function applySpecialEffect(type, lx) {
+  switch (type) {
+    case 'double_score':
+      doubleScoreTimer = 20000;
+      addFloat('★ ניקוד כפול פעיל!', W / 2, H * 0.38, '#ffd700');
+      showPowerBanner('★ ניקוד ×2', '#ffd700');
+      break;
+    case 'extra_life':
+      lives = Math.min(lives + 1, 6);
+      updateHUD();
+      addFloat('❤ +1 חיים!', lx, TRUCK_Y - 72, '#ff69b4');
+      showPowerBanner('❤ +1', '#ff69b4');
+      break;
+    case 'freeze':
+    case 'hint':
+    case 'swap_question':
+    case 'wrong_only':
+    case 'restock':
+      giveCard(type);
+      break;
+    case 'shield':
+      shieldActive = true;
+      addFloat('🛡 מגן פעיל!', lx, TRUCK_Y - 72, '#d0d0e0');
+      showPowerBanner('🛡 מגן', '#d0d0e0');
+      break;
+    case 'blast':
+      giveCard('blast');
+      break;
+    case 'joker':
+      // Give ALL card-type powers at once
+      CARD_TYPES.forEach(t => giveCard(t));
+      // Apply all immediate-effect powers
+      doubleScoreTimer = Math.max(doubleScoreTimer, 20000);
+      lives = Math.min(lives + 1, 6); updateHUD();
+      shieldActive = true;
+      addFloat('🃏 ג\'וקר — הכל!', W / 2, H * 0.35, '#ffffff');
+      showPowerBanner('🃏 כל הכוחות!', '#ffffff');
+      break;
+  }
+}
+
+// Give a power card. If already held → activate immediately instead of wasting it.
+function giveCard(type) {
+  if (cards[type]) {
+    // Slot full — activate now so the interception isn't wasted
+    activateCardEffect(type);
+    return;
+  }
+  cards[type] = true;
+  updateCardUI();
+  const icons  = { freeze: '❄️', hint: '💡', swap_question: '🔄', wrong_only: '🚫', restock: '🔋', blast: '💥' };
+  const names  = { freeze: 'הקפאה', hint: 'רמז', swap_question: 'החלפת שאלה', wrong_only: 'רק תשובות לא נכונות', restock: 'הצטיידות', blast: 'פיצוץ שטח' };
+  const cols   = { freeze: '#00d4ff', hint: '#ff9900', swap_question: '#b044ff', wrong_only: '#e03060', restock: '#44dd88', blast: '#ff6600' };
+  const ic = icons[type], nm = names[type], col = cols[type];
+  addFloat(`${ic} ${nm}`, W / 2, H * 0.38, col);
+  showPowerBanner(`${ic} ${nm}`, col);
+}
+
+function activateCardEffect(type) {
+  switch (type) {
+    case 'freeze':
+      freezeTimer = 12000;
+      addFloat('❄️ הקפאה!', W / 2, H * 0.38, '#00d4ff');
+      showPowerBanner('❄️ הקפאה', '#00d4ff');
+      break;
+    case 'hint':
+      hintTimer = 6000;
+      showPowerBanner('💡 רמז', '#ff9900');
+      break;
+    case 'swap_question':
+      if (!questionedMissile) {
+        // No active question — return the card
+        cards[type] = true; updateCardUI(); return;
+      }
+      const newQ = genQuestion(minMathLvl);
+      questionedMissile.question = newQ;
+      assignAnswers(newQ);
+      showQ(newQ.text);
+      addFloat('🔄 שאלה חדשה!', W / 2, H * 0.38, '#b044ff');
+      showPowerBanner('🔄 שאלה חדשה', '#b044ff');
+      break;
+    case 'wrong_only':
+      wrongOnlyTimer = 10000;
+      addFloat('🚫 רק תשובות לא נכונות!', W / 2, H * 0.38, '#e03060');
+      showPowerBanner('🚫 רק תשובות לא נכונות', '#e03060');
+      break;
+    case 'restock':
+      trucks.forEach(t => { t.stock = Math.min(t.stock + 3, STOCK_MAX); });
+      addFloat('🔋 +3 טילים!', W / 2, H * 0.38, '#44dd88');
+      showPowerBanner('🔋 +3', '#44dd88');
+      updateHUD();
+      break;
+    case 'blast':
+      blastTimer = 15000;
+      addFloat('💥 פיצוץ שטח!', W / 2, H * 0.38, '#ff6600');
+      showPowerBanner('💥 פיצוץ שטח', '#ff6600');
+      break;
+  }
+}
+
+function useCard(type) {
+  if (!cards[type]) return;
+  if (gameState !== 'PLAYING' && gameState !== 'QUESTION') return;
+  if (type === 'swap_question' && gameState !== 'QUESTION') return;
+  cards[type] = false;
+  updateCardUI();
+  activateCardEffect(type);
+}
+
+function updateCardUI() {
+  CARD_TYPES.forEach(type => {
+    const btn = document.getElementById(`card-${type}`);
+    if (!btn) return;
+    btn.classList.toggle('has-card', !!cards[type]);
+    // swap_question dims when question not active (can't be used outside QUESTION state)
+    if (type === 'swap_question') {
+      btn.classList.toggle('swap-dim', !!cards[type] && gameState !== 'QUESTION');
+    }
+  });
+}
+
+// ── Blast splash: destroy all nearby active missiles in radius when blast card is active ──
+function triggerBlastSplash(ex, ey) {
+  if (blastTimer <= 0) return;
+  // Spawn expanding shockwave ring visual
+  shockwaves.push({ x: ex, y: ey, r: 20, maxR: BLAST_RADIUS + 20, alpha: 1.0 });
+  beep('boom');
+
+  const nearby = missiles.filter(m => m.active && Math.hypot(m.x - ex, m.y - ey) < BLAST_RADIUS);
+  if (!nearby.length) return;
+
+  nearby.forEach(m => {
+    m.active = false;
+    explosions.push(mkExplosion(m.x, m.y, true));
+    let pts = Math.round((80 + wave * 5) * (doubleScoreTimer > 0 ? 2 : 1));
+    score += pts;
+    addFloat(`+${pts}`, m.x, m.y - 10, '#ff6600');
+    streak++;
+    addEnergy(Math.min(2 + streak * 0.8, 12));
+    if (streak >= 3) addFloat(`🔥×${streak}`, ex, ey - 30, streak >= 7 ? '#ffd700' : '#ff8c00');
+    // Apply special/joker effect for any special missiles caught in blast
+    if (m.special) applySpecialEffect(m.specialType, m.x);
+    // If the questioned missile was in the blast, clear the question
+    if (m === questionedMissile) {
+      questionedMissile = null;
+      hideQ();
+    }
+    // Count regular/splitter/mini toward wave resolution
+    resolved++;
+  });
+
+  updateHUD();
+  promoteNextQuestioned();
+}
+
+function missileHit(missile) {
+  missile.active = false;
+  const wasQuestioned = (missile === questionedMissile);
+
+  // ── Mini missile hits city ──
+  if (missile.mini) {
+    explosions.push(mkExplosion(missile.x, GROUND_Y - 18, false));
+    beep('hit');
+    if (shieldActive) {
+      shieldActive = false;
+      addFloat('🛡 חסום!', missile.x, GROUND_Y - 55, '#d0d0e0');
+    } else {
+      lives--;
+      damageFlash = 500;
+    }
+    updateHUD();
+    if (lives <= 0) { waveActive = false; setTimeout(() => endGame(false), 800); }
+    return;
+  }
+
+  // ── Splitter hits city — treat like a regular missile miss (no split on miss) ──
+  // falls through to the regular missile block below
+
+  // ── Other special hits city — treat like regular miss ──
+  if (missile.special) {
+    explosions.push(mkExplosion(missile.x, GROUND_Y - 18, true));
+    beep('hit');
+    if (shieldActive) {
+      shieldActive = false;
+      addFloat('🛡 חסום!', missile.x, GROUND_Y - 55, '#d0d0e0');
+    } else {
+      lives--;
+      damageFlash = 700;
+    }
+    updateHUD();
+    if (wasQuestioned) promoteNextQuestioned();
+    if (lives <= 0) { waveActive = false; setTimeout(() => endGame(false), 800); }
+    return;
+  }
+
+  // ── Regular missile hits city ──
+  streak = 0;
+  resolved++;
+  explosions.push(mkExplosion(missile.x, GROUND_Y - 18, true));
+  beep('hit');
+  if (shieldActive) {
+    shieldActive = false;
+    addFloat('🛡 חסום!', missile.x, GROUND_Y - 55, '#d0d0e0');
+  } else {
+    lives--;
+    damageFlash = 700;
+  }
+  updateHUD();
+  if (wasQuestioned) promoteNextQuestioned();
+  if (lives <= 0) { waveActive = false; setTimeout(() => endGame(false), 800); }
+}
+
+function onWaveComplete() {
+  const nextWave = wave + 1;
+  let bannerTitle = `גל ${wave} הושלם! ✓`;
+  let bannerSub   = `מתכוננים לגל ${nextWave}…`;
+
+  if (wave % 10 === 0) {
+    lives = Math.min(lives + 1, 6); // bonus life every 10 waves (max 6)
+    updateHUD();
+    bannerTitle = `🎉 גל ${wave} הושלם!`;
+    bannerSub   = `❤ קיבלתם חיים נוספים — המשיכו!`;
+    if (window.hj) hj('event', `milestone_wave_${wave}`);
+  }
+
+  showBanner(bannerTitle, bannerSub);
+  if (window.hj) hj('event', `wave_complete`);
+  setTimeout(() => {
+    hideBanner();
+    wave = nextWave;
+    startWave();
+  }, 2600);
+}
+
+function startWave() {
+  const cfg = getWaveCfg(wave);
+  totalMissiles = cfg.n;
+  spawned = 0;
+  resolved = 0;
+  spawnTimer = 900;
+  // Splitter appears randomly — 50% chance from wave 2, capped at 75%
+  waveHasSplitter = wave >= 2 && Math.random() < Math.min(0.5 + wave * 0.02, 0.75);
+  // Don't reset specialSpawnTimer here — it carries over between waves
+  hideQ();
+  missiles = []; shockwaves = [];
+  questionedMissile = null;
+  interceptors = interceptors.filter(ic => ic.active);
+  restockTrucks();
+  waveActive = true;
+  gameState = 'PLAYING';
+  updateHUD();
+}
+
+function startNewGame() {
+  score = 0; lives = 3; wave = 1;
+  missiles = []; interceptors = []; explosions = []; floatTexts = []; shockwaves = [];
+  questionedMissile = null;
+  damageFlash = 0; hoveredTruck = null;
+  doubleScoreTimer = 0; freezeTimer = 0; hintTimer = 0; wrongOnlyTimer = 0; blastTimer = 0; shieldActive = false;
+  streak = 0; energy = 0; lasers = []; updateLaserBtn();
+  CARD_TYPES.forEach(t => { cards[t] = false; }); updateCardUI();
+  document.getElementById('laser-btn-wrap').style.display = '';
+  document.getElementById('card-slots').style.display    = '';
+  specialSpawnTimer = ri(9000, 15000); // first special missile within 9-15 seconds
+  if (window.hj) hj('event', `game_start_diff${minMathLvl}`);
+  if (gameState === 'PAUSED') {
+    document.getElementById('pause-overlay').classList.add('hidden');
+    document.getElementById('btn-pause').classList.remove('paused');
+    pausedState = null;
+  }
+  initTrucks();
+  updateHUD();
+  showScreen(null);
+  startWave();
+}
+
+function endGame(won) {
+  gameState = won ? 'WIN' : 'GAME_OVER';
+  // Clear all in-flight objects so nothing renders behind the end screen
+  missiles = []; interceptors = []; floatTexts = []; lasers = []; shockwaves = [];
+  questionedMissile = null;
+  hideQ();
+  energy = 0; streak = 0; updateLaserBtn();      // strip ready/pulse state before hiding
+  doubleScoreTimer = 0; freezeTimer = 0; hintTimer = 0; wrongOnlyTimer = 0; blastTimer = 0; shieldActive = false;
+  CARD_TYPES.forEach(t => { cards[t] = false; }); updateCardUI();
+  // Hide HUD overlays
+  document.getElementById('laser-btn-wrap').style.display = 'none';
+  document.getElementById('card-slots').style.display    = 'none';
+  if (won) {
+    document.getElementById('win-score').textContent = `ניקוד: ${score}`;
+    showScreen('win');
+  } else {
+    document.getElementById('gameover-score').textContent = `ניקוד: ${score}`;
+    showScreen('gameover');
+  }
+  if (window.hj) hj('event', `game_over_wave${wave}_score${score}_diff${minMathLvl}`);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════════════════════════
+function draw(dt) {
+  ctx.clearRect(0, 0, W, H);
+  drawBG();
+  drawStars();
+  drawClouds(dt);
+  drawGround();
+  drawTrucks();
+  missiles.filter(m => m.active && m !== questionedMissile).forEach(m => drawMissile(m, false));
+  if (questionedMissile?.active) drawMissile(questionedMissile, true);
+  interceptors.forEach(drawInterceptor);
+  drawLasers();
+  explosions.forEach(drawExplosion);
+  drawShockwaves();
+  drawFloats();
+  drawEffects();
+  drawEnergyBar();
+  drawStreak();
+  drawWrongOnlyLabel();
+  drawBlastLabel();
+  if (damageFlash > 0) {
+    ctx.fillStyle = `rgba(210,20,20,${Math.min(0.45, (damageFlash/700)*0.45)})`;
+    ctx.fillRect(0, 0, W, H);
+  }
+}
+
+function drawBG() {
+  if (bgGame.complete && bgGame.naturalWidth > 0) {
+    ctx.drawImage(bgGame, 0, 0, W, H);
+  } else {
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, '#020214');
+    g.addColorStop(1, '#0c0c28');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+  }
+}
+
+function drawStars() {
+  const now = performance.now() * 0.0008;
+  ctx.fillStyle = '#fff';
+  STARS.forEach(s => {
+    ctx.globalAlpha = 0.28 + 0.32 * Math.sin(now + s.phase);
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+}
+
+function drawClouds(dt) {
+  if (!cloudsImg.complete || !cloudsImg.naturalWidth) return;
+  const iw = cloudsImg.naturalWidth;
+  const ih = cloudsImg.naturalHeight;
+  const halfH = ih / 2;
+
+  ctx.save();
+  ctx.globalCompositeOperation = 'screen'; // removes black bg from clouds PNG
+  CLOUDS.forEach(c => {
+    // Move right-to-left
+    c.x -= c.speed * ((dt || 16.67) / 16.67);
+    const dw = W * 0.80 * c.scale;
+    const dh = dw * (halfH / iw);
+    if (c.x + dw < 0) c.x = W + 10; // wrap around
+    const sy = c.sprite === 0 ? 0 : halfH;
+    ctx.globalAlpha = c.alpha;
+    ctx.drawImage(cloudsImg, 0, sy, iw, halfH, c.x, c.y, dw, dh);
+  });
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.globalAlpha = 1;
+  ctx.restore();
+}
+
+function drawEffects() {
+  const now = performance.now();
+  const indicators = [];
+  if (doubleScoreTimer > 0) indicators.push({ icon: '★', label: 'ניקוד ×2', col: '#ffd700', t: doubleScoreTimer / 20000, timeMs: doubleScoreTimer });
+  if (freezeTimer      > 0) indicators.push({ icon: '❄️', label: 'הקפאה',    col: '#00d4ff', t: freezeTimer / 12000,      timeMs: freezeTimer });
+  if (shieldActive)          indicators.push({ icon: '🛡', label: 'מגן',      col: '#d0d0e0', t: 1,                        timeMs: 0 });
+  if (hintTimer        > 0) indicators.push({ icon: '💡', label: 'רמז',      col: '#ff9900', t: hintTimer / 6000,          timeMs: hintTimer });
+  if (wrongOnlyTimer   > 0) indicators.push({ icon: '🚫', label: 'רק לא נכונות', col: '#e03060', t: wrongOnlyTimer / 10000, timeMs: wrongOnlyTimer });
+  if (blastTimer       > 0) indicators.push({ icon: '💥', label: 'פיצוץ שטח',   col: '#ff6600', t: blastTimer / 15000,     timeMs: blastTimer });
+  if (!indicators.length) return;
+
+  const barW = 82, barH = 16, pad = 6;
+  indicators.forEach((ind, i) => {
+    const x = W - barW - 10;
+    const y = 62 + i * (barH + pad);
+    const isLow = ind.timeMs > 0 && ind.t < 0.25;
+    // Fast blink when < 25% remaining, normal pulse otherwise
+    const pulse = isLow
+      ? (Math.sin(now * 0.018) > 0 ? 1.0 : 0.25)
+      : 0.75 + 0.25 * Math.sin(now * 0.004 + i * 1.4);
+    // background
+    ctx.globalAlpha = 0.85;
+    ctx.fillStyle = 'rgba(0,0,0,0.60)';
+    ctx.beginPath(); ctx.roundRect(x, y, barW, barH, 4); ctx.fill();
+    // progress bar
+    ctx.fillStyle = ind.col;
+    ctx.globalAlpha = isLow ? pulse * 0.55 : 0.28;
+    if (ind.t > 0) { ctx.beginPath(); ctx.roundRect(x, y, barW * ind.t, barH, 4); ctx.fill(); }
+    // text label + countdown
+    ctx.globalAlpha = pulse;
+    ctx.fillStyle = ind.col;
+    ctx.font = `bold 10px Rubik, Arial`;
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    const secLeft = ind.timeMs > 0 ? ` ${Math.ceil(ind.timeMs / 1000)}s` : '';
+    ctx.fillText(`${ind.icon} ${ind.label}${secLeft}`, x + barW - 4, y + barH / 2);
+  });
+  ctx.globalAlpha = 1;
+  ctx.textAlign = 'left';
+}
+
+function drawEnergyBar() {
+  if (gameState !== 'PLAYING' && gameState !== 'QUESTION') return;
+  const now  = performance.now();
+  // Vertical bar on the left side
+  const bw   = 12, bh = 200;
+  const bx   = 10;
+  const by   = H / 2 - bh / 2;
+  const fill = energy / MAX_ENERGY;
+  const full = fill >= 1;
+
+  ctx.save();
+
+  // Background track
+  ctx.globalAlpha = 0.75;
+  ctx.fillStyle = 'rgba(0,0,0,0.65)';
+  ctx.beginPath(); ctx.roundRect(bx - 2, by - 2, bw + 4, bh + 4, 6); ctx.fill();
+
+  // Segmentation lines (5 tick marks)
+  ctx.globalAlpha = 0.25;
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 1;
+  for (let i = 1; i < 5; i++) {
+    const ty = by + (bh / 5) * i;
+    ctx.beginPath(); ctx.moveTo(bx, ty); ctx.lineTo(bx + bw, ty); ctx.stroke();
+  }
+
+  // Fill — grows from bottom to top
+  if (fill > 0) {
+    const fillH = bh * Math.min(fill, 1);
+    const grad  = ctx.createLinearGradient(bx, by + bh, bx, by);
+    grad.addColorStop(0,   '#0055cc');
+    grad.addColorStop(0.5, '#00bbff');
+    grad.addColorStop(1,   full ? '#ffd700' : '#00ffcc');
+    ctx.fillStyle   = grad;
+    ctx.globalAlpha = full ? (0.78 + 0.22 * Math.sin(now * 0.009)) : 0.92;
+    if (full) { ctx.shadowColor = '#00dcff'; ctx.shadowBlur = 16; }
+    ctx.beginPath(); ctx.roundRect(bx, by + bh - fillH, bw, fillH, 4); ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+
+  ctx.globalAlpha = 1;
+  ctx.restore();
+}
+
+function drawStreak() {
+  if (gameState !== 'PLAYING' && gameState !== 'QUESTION') return;
+  if (streak < 2) return;
+  const now = performance.now();
+  ctx.save();
+  const sc    = streak >= 10 ? '#ffd700' : streak >= 6 ? '#ff8c00' : '#ff6644';
+  const sz    = Math.min(11 + streak * 0.9, 20);
+  const pulse = streak >= 6 ? 0.85 + 0.15 * Math.sin(now * 0.008) : 1;
+  // Right side, above the card slots.
+  // Cards (4 slots × 36px + 3 × 7px gaps = 165px) centred at H/2 → top edge at H/2 - 82.5
+  // Place streak 30px above that top edge.
+  const sx = W - 22;
+  const sy = H / 2 - 82 - 30 - sz;
+  ctx.globalAlpha  = pulse;
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = `bold ${sz}px Rubik, Arial`;
+  ctx.fillStyle    = sc;
+  ctx.shadowColor  = sc;
+  ctx.shadowBlur   = streak >= 6 ? 14 : 6;
+  ctx.fillText('🔥', sx, sy);
+  ctx.fillText(`×${streak}`, sx, sy + sz + 2);
+  ctx.shadowBlur = 0;
+  ctx.restore();
+}
+
+function drawWrongOnlyLabel() {
+  if (wrongOnlyTimer <= 0) return;
+  if (gameState !== 'PLAYING' && gameState !== 'QUESTION') return;
+  const now   = performance.now();
+  const secs  = Math.ceil(wrongOnlyTimer / 1000);
+  const pulse = 0.82 + 0.18 * Math.sin(now * 0.005);
+  const urgnt = secs <= 3;
+  ctx.save();
+  ctx.globalAlpha = pulse;
+  ctx.textAlign   = 'center';
+  // label text
+  ctx.font        = 'bold 13px Rubik, Arial';
+  ctx.textBaseline = 'bottom';
+  ctx.fillStyle   = '#e03060';
+  ctx.shadowColor = '#e03060';
+  ctx.shadowBlur  = 10;
+  ctx.fillText('🚫 רק תשובות לא נכונות', W / 2, H - 58);
+  // countdown
+  ctx.font        = `bold ${urgnt ? 22 : 18}px Rubik, Arial`;
+  ctx.textBaseline = 'top';
+  ctx.fillStyle   = urgnt ? '#ff2255' : '#e03060';
+  ctx.shadowColor = urgnt ? '#ff2255' : '#e03060';
+  ctx.shadowBlur  = urgnt ? 18 : 8;
+  ctx.fillText(`${secs}`, W / 2, H - 56);
+  ctx.shadowBlur = 0;
+  ctx.restore();
+}
+
+function drawBlastLabel() {
+  if (blastTimer <= 0) return;
+  if (gameState !== 'PLAYING' && gameState !== 'QUESTION') return;
+  const now   = performance.now();
+  const secs  = Math.ceil(blastTimer / 1000);
+  const pulse = 0.82 + 0.18 * Math.sin(now * 0.006);
+  const urgnt = secs <= 3;
+  ctx.save();
+  ctx.globalAlpha = pulse;
+  ctx.textAlign   = 'center';
+  ctx.font        = 'bold 13px Rubik, Arial';
+  ctx.textBaseline = 'bottom';
+  ctx.fillStyle   = '#ff6600';
+  ctx.shadowColor = '#ff4400';
+  ctx.shadowBlur  = 10;
+  ctx.fillText('💥 פיצוץ שטח פעיל', W / 2, H - 40);
+  ctx.font        = `bold ${urgnt ? 22 : 18}px Rubik, Arial`;
+  ctx.textBaseline = 'top';
+  ctx.fillStyle   = urgnt ? '#ff3300' : '#ff6600';
+  ctx.shadowColor = urgnt ? '#ff1100' : '#ff4400';
+  ctx.shadowBlur  = urgnt ? 18 : 8;
+  ctx.fillText(`${secs}`, W / 2, H - 38);
+  ctx.shadowBlur = 0;
+  ctx.restore();
+}
+
+function drawLasers() {
+  if (!lasers.length) return;
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  lasers.forEach(l => {
+    const w = 2 + l.alpha * 5;
+    // Outer glow beam
+    ctx.globalAlpha = l.alpha * 0.55;
+    ctx.strokeStyle = '#00aaff';
+    ctx.lineWidth   = w + 4;
+    ctx.shadowColor = '#00dcff';
+    ctx.shadowBlur  = 22;
+    ctx.beginPath(); ctx.moveTo(l.x1, l.y1); ctx.lineTo(l.x2, l.y2); ctx.stroke();
+    // Core beam
+    ctx.globalAlpha = l.alpha;
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth   = w;
+    ctx.shadowBlur  = 12;
+    ctx.beginPath(); ctx.moveTo(l.x1, l.y1); ctx.lineTo(l.x2, l.y2); ctx.stroke();
+  });
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.globalAlpha = 1;
+  ctx.shadowBlur  = 0;
+  ctx.restore();
+}
+
+function drawShockwaves() {
+  if (!shockwaves.length) return;
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  shockwaves.forEach(sw => {
+    // Outer glow ring
+    ctx.globalAlpha = sw.alpha * 0.4;
+    ctx.strokeStyle = '#ff8800';
+    ctx.lineWidth   = 6;
+    ctx.shadowColor = '#ff4400';
+    ctx.shadowBlur  = 24;
+    ctx.beginPath(); ctx.arc(sw.x, sw.y, sw.r, 0, Math.PI * 2); ctx.stroke();
+    // Inner sharp ring
+    ctx.globalAlpha = sw.alpha * 0.7;
+    ctx.strokeStyle = '#ffcc44';
+    ctx.lineWidth   = 2;
+    ctx.shadowBlur  = 10;
+    ctx.beginPath(); ctx.arc(sw.x, sw.y, sw.r * 0.72, 0, Math.PI * 2); ctx.stroke();
+  });
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.globalAlpha = 1;
+  ctx.shadowBlur  = 0;
+  ctx.restore();
+}
+
+function drawGround() {
+  // Subtle dark strip at bottom for truck readability
+  const gl = ctx.createLinearGradient(0, GROUND_Y - 30, 0, H);
+  gl.addColorStop(0, 'rgba(2,2,20,0)');
+  gl.addColorStop(1, 'rgba(2,2,20,0.72)');
+  ctx.fillStyle = gl;
+  ctx.fillRect(0, GROUND_Y - 30, W, H - GROUND_Y + 30);
+}
+
+function drawTrucks() {
+  trucks.forEach(drawTruck);
+}
+
+function drawTruck(t) {
+  ctx.save();
+  const shx = t.shakeT > 0 ? Math.sin(t.shakeT * 0.045) * 5 : 0;
+  ctx.translate(t.x + shx, t.y);
+
+  // Mirror the right-facing battery
+  const flip = (t.orient === 'right');
+  if (flip) ctx.scale(-1, 1);
+
+  const empty   = t.stock <= 0;
+  const hovered = (t === hoveredTruck && gameState === 'QUESTION' && !empty);
+  const firing  = t.flashT > 0;
+
+  const C = empty
+    ? { body:'#272727', mid:'#1e1e1e', light:'#303030', dark:'#141414', rim:'#252525' }
+    : { body:'#3d5228', mid:'#2f3f1e', light:'#526837', dark:'#222e14', rim:'#4a6230' };
+
+  ctx.shadowBlur = 0;
+  if (hovered) { ctx.shadowColor = '#2ec4b6'; ctx.shadowBlur = 22; }
+  if (firing)  { ctx.shadowColor = '#ffaa00'; ctx.shadowBlur = 30; }
+
+  // ── Trailer / chassis base ──
+  ctx.fillStyle = C.body;
+  rRect(ctx, -54, -8, 108, 20, 3);
+  ctx.fill();
+  ctx.fillStyle = C.dark;
+  ctx.fillRect(-52, 8, 104, 4);
+  ctx.strokeStyle = C.light;
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(-52, -1); ctx.lineTo(52, -1); ctx.stroke();
+
+  // ── Cab (right side) ──
+  ctx.fillStyle = C.mid;
+  rRect(ctx, 28, -24, 26, 18, 3);
+  ctx.fill();
+  ctx.fillStyle = C.light;
+  rRect(ctx, 28, -24, 26, 7, 3);
+  ctx.fill();
+  ctx.fillStyle = empty ? '#111' : '#0f2018';
+  ctx.fillRect(30, -22, 22, 12);
+  ctx.fillStyle = 'rgba(255,255,255,0.06)';
+  ctx.fillRect(30, -22, 10, 12);
+
+  // ── Launcher box: angle depends on orientation ──
+  // left=-0.62 (upper-left), front=-1.15 (nearly straight up), right=-0.62 (flipped → upper-right)
+  const launcherAngle = t.orient === 'front' ? -1.15 : -0.62;
+  ctx.save();
+  ctx.translate(-12, -8);
+  ctx.rotate(launcherAngle);
+
+  ctx.fillStyle = C.dark;
+  rRect(ctx, -26, -24, 54, 38, 4);
+  ctx.fill();
+
+  ctx.fillStyle = C.body;
+  rRect(ctx, -28, -26, 54, 36, 4);
+  ctx.fill();
+
+  ctx.fillStyle = C.light;
+  rRect(ctx, -28, -26, 54, 8, 4);
+  ctx.fill();
+
+  ctx.strokeStyle = C.dark;
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(-26, -10); ctx.lineTo(24, -10); ctx.stroke();
+
+  // Tamir missile tube openings (2 rows × 3 cols)
+  for (let row = 0; row < 2; row++) {
+    for (let col = 0; col < 3; col++) {
+      const tx = -17 + col * 14;
+      const ty = -19 + row * 12;
+      ctx.fillStyle = C.dark;
+      ctx.beginPath(); ctx.ellipse(tx, ty, 5, 4, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = C.rim;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.ellipse(tx, ty, 5, 4, 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.fillStyle = 'rgba(255,255,255,0.04)';
+      ctx.beginPath(); ctx.ellipse(tx - 1, ty - 1, 2.5, 2, 0, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+  ctx.restore();
+
+  // ── Radar mast (right of cab) ──
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = C.mid;
+  ctx.fillRect(44, -30, 4, 22);
+  ctx.strokeStyle = C.light;
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(46, -30, 9, Math.PI, Math.PI * 2); ctx.stroke();
+  ctx.fillStyle = C.light;
+  ctx.beginPath(); ctx.arc(46, -30, 2, 0, Math.PI * 2); ctx.fill();
+
+  // ── Answer number badge — always visible ──
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.shadowBlur = 0;
+  if (t.ansVal !== null) {
+    const hov = hovered && !empty;
+    const depleted = empty;
+    ctx.fillStyle = depleted ? 'rgba(30,0,0,0.78)' : hov ? 'rgba(46,196,182,0.25)' : 'rgba(0,0,15,0.78)';
+    ctx.strokeStyle = depleted ? '#5a1010' : hov ? '#2ec4b6' : '#3a7070';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(-4, -34, 19, 0, Math.PI * 2);
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = depleted ? '#663333' : hov ? '#2ec4b6' : '#fff';
+    ctx.shadowColor = 'rgba(46,196,182,0.6)';
+    ctx.shadowBlur = (hov && !depleted) ? 14 : 6;
+    ctx.font = 'bold 18px Rubik, Segoe UI, Arial';
+    ctx.save();
+    ctx.translate(-4, -34);
+    if (flip) ctx.scale(-1, 1);
+    ctx.fillText(String(t.ansVal), 0, 0);
+    ctx.restore();
+    ctx.shadowBlur = 0;
+  } else {
+    ctx.fillStyle = '#2a2a2a';
+    ctx.beginPath(); ctx.arc(-4, -34, 19, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#556';
+    ctx.font = 'bold 16px Rubik, Segoe UI, Arial';
+    ctx.save();
+    ctx.translate(-4, -34);
+    if (flip) ctx.scale(-1, 1);
+    ctx.fillText('?', 0, 0);
+    ctx.restore();
+  }
+
+  // ── Wheels (5 wheels) ──
+  ctx.shadowBlur = 0;
+  [-40, -22, 0, 18, 36].forEach(wx => {
+    ctx.fillStyle = '#151515';
+    ctx.beginPath(); ctx.arc(wx, 14, 10, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#282828';
+    ctx.beginPath(); ctx.arc(wx, 14, 5.5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#333';
+    for (let b = 0; b < 5; b++) {
+      const ba = (b / 5) * Math.PI * 2;
+      ctx.beginPath();
+      ctx.arc(wx + Math.cos(ba) * 3.5, 14 + Math.sin(ba) * 3.5, 1.2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.fillStyle = '#1e1e1e';
+    ctx.beginPath(); ctx.arc(wx, 14, 2, 0, Math.PI * 2); ctx.fill();
+  });
+
+  // ── Stock dots (missile count) ──
+  for (let s = 0; s < STOCK_MAX; s++) {
+    ctx.fillStyle   = s < t.stock ? '#2ec4b6' : '#1c1c1c';
+    ctx.strokeStyle = s < t.stock ? '#1a9090' : '#242424';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(-22 + s * 11, 28, 4, 0, Math.PI * 2);
+    ctx.fill(); ctx.stroke();
+  }
+
+  // wrong_only: no visual change on batteries — logic only
+
+  // ── Hint glow (💡 effect active + this is the correct battery) ──
+  if (hintTimer > 0 && t.correct && gameState === 'QUESTION') {
+    const p = 0.45 + 0.55 * Math.sin(performance.now() * 0.009);
+    ctx.strokeStyle = `rgba(255,153,0,${p})`;
+    ctx.lineWidth = 3;
+    ctx.shadowColor = '#ff9900';
+    ctx.shadowBlur = 28 * p;
+    rRect(ctx, -58, -48, 118, 80, 7);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+
+  // ── Hover selection outline ──
+  if (hovered) {
+    ctx.strokeStyle = 'rgba(46,196,182,0.8)';
+    ctx.lineWidth = 2.5;
+    ctx.shadowColor = '#2ec4b6';
+    ctx.shadowBlur = 14;
+    rRect(ctx, -58, -48, 118, 80, 7);
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
+function drawMissile(m, isQuestioned) {
+  const now = performance.now();
+  const stype = m.special ? SPECIAL_TYPES[m.specialType] : null;
+  const isSplitter = m.splitter === true;
+  const isJoker    = m.special && m.specialType === 'joker';
+  const mScale = m.mini ? 0.55 : 1;
+
+  // ── Splitter glow ring (menacing fire pulse) ──
+  if (isSplitter) {
+    const pulse = 0.5 + 0.5 * Math.sin(now * 0.005);
+    ctx.save();
+    // outer soft halo
+    ctx.globalAlpha = pulse * 0.4;
+    ctx.strokeStyle = '#ff2200';
+    ctx.lineWidth = 10;
+    ctx.shadowColor = '#ff2200';
+    ctx.shadowBlur = 48;
+    ctx.beginPath();
+    ctx.arc(m.x, m.y, 58 + 6 * Math.sin(now * 0.004), 0, Math.PI * 2);
+    ctx.stroke();
+    // inner sharp ring
+    ctx.globalAlpha = pulse * 0.85;
+    ctx.strokeStyle = '#ff5500';
+    ctx.lineWidth = 3;
+    ctx.shadowBlur = 20;
+    ctx.beginPath();
+    ctx.arc(m.x, m.y, 40 + 4 * Math.sin(now * 0.006), 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.restore();
+    // ☢ warning icon above
+    ctx.save();
+    ctx.font = 'bold 16px Rubik, Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillStyle = '#ffcc00';
+    ctx.shadowColor = '#ff4400';
+    ctx.shadowBlur = 14;
+    ctx.fillText('☢', m.x, m.y - 44);
+    ctx.restore();
+  }
+
+  // ── Other special missile glow ring ──
+  if (m.special) {
+    const pulse = 0.5 + 0.5 * Math.sin(now * 0.005);
+    ctx.save();
+    if (isJoker) {
+      // Joker: rotating three-color Christmas glow rings
+      const angle = now * 0.003;
+      const jokerCols = ['#ff2222', '#22cc44', '#ffffff'];
+      jokerCols.forEach((col, i) => {
+        ctx.globalAlpha = pulse * 0.7;
+        ctx.strokeStyle = col;
+        ctx.lineWidth = 3;
+        ctx.shadowColor = col;
+        ctx.shadowBlur = 18;
+        ctx.beginPath();
+        ctx.arc(m.x, m.y, 30 + i * 8 + 4 * Math.sin(now * 0.004 + i * 2), 0, Math.PI * 2);
+        ctx.stroke();
+      });
+    } else {
+      ctx.globalAlpha = pulse * 0.65;
+      ctx.strokeStyle = stype.col;
+      ctx.lineWidth = 3;
+      ctx.shadowColor = stype.col;
+      ctx.shadowBlur = 22;
+      ctx.beginPath();
+      ctx.arc(m.x, m.y, 28 + 5 * Math.sin(now * 0.004), 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    ctx.restore();
+    // Bonus icon above special missile
+    ctx.save();
+    ctx.font = `bold ${isJoker ? 16 : 10}px Rubik, Arial`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillStyle = isJoker ? '#ffd700' : stype.col;
+    ctx.shadowColor = isJoker ? '#ff4400' : stype.shadow;
+    ctx.shadowBlur = isJoker ? 16 : 8;
+    ctx.fillText(isJoker ? '🃏' : stype.label.split(' ').slice(-1)[0], m.x, m.y - (isJoker ? 46 : 32));
+    ctx.restore();
+  }
+
+  if (isQuestioned) {
+    const pulse = 0.55 + 0.45 * Math.sin(now * 0.006);
+    ctx.globalAlpha = pulse * 0.7;
+    ctx.strokeStyle = '#2ec4b6';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 5]);
+    ctx.beginPath();
+    ctx.arc(m.x, m.y, 24 + 4 * Math.sin(now * 0.004), 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.globalAlpha = pulse;
+    ctx.fillStyle = '#2ec4b6';
+    ctx.beginPath(); ctx.arc(m.x, m.y, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+
+  const trailCol = isSplitter ? '#ff4400' : (isQuestioned ? '#ff9f1c' : '#aa2200');
+  const jokerTrailCols = ['#ff2222', '#22cc44', '#ffffff', '#ffd700'];
+  m.trail.forEach((pt, i) => {
+    const a = (i / m.trail.length) * (isQuestioned ? 0.55 : 0.35);
+    const r = (i / m.trail.length) * 4.5 + 0.8;
+    ctx.globalAlpha = a;
+    ctx.fillStyle = isJoker ? jokerTrailCols[i % 4] : trailCol;
+    ctx.beginPath(); ctx.arc(pt.x, pt.y, r + (isJoker ? 1 : 0), 0, Math.PI*2); ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+
+  const ang = Math.atan2(m.tx - m.x, m.y - GROUND_Y);
+  ctx.save();
+  ctx.translate(m.x, m.y);
+  // Splitter is visually fat — stretch wider, squash taller
+  ctx.scale(mScale * (isSplitter ? 2.2 : 1), mScale * (isSplitter ? 1.5 : 1));
+  ctx.rotate(ang);
+
+  // Color scheme: joker = white+stripes, splitter = black/fire, special = type color, mini = purple, normal = red
+  const bodyCol = isSplitter ? '#0d0d0d' : (isJoker ? '#f8f8f8' : (m.special ? stype.col    : (m.mini ? '#9b59b6' : (isQuestioned ? '#e84000' : '#7a0010'))));
+  const noseCol = isSplitter ? '#ff3300' : (isJoker ? '#ffd700' : (m.special ? '#fff'       : (m.mini ? '#cbf3f0' : (isQuestioned ? '#ff5500' : '#a00018'))));
+  const finCol  = isSplitter ? '#cc1100' : (isJoker ? '#cc2200' : (m.special ? stype.shadow : (m.mini ? '#5b2c6f' : (isQuestioned ? '#cc3300' : '#5a000c'))));
+
+  if (isSplitter)        { ctx.shadowColor = '#ff2200'; ctx.shadowBlur = 32; }
+  else if (isJoker)      { ctx.shadowColor = '#ffd700'; ctx.shadowBlur = 28; }
+  else if (isQuestioned) { ctx.shadowColor = '#ff6600'; ctx.shadowBlur = 14; }
+  else if (m.special)    { ctx.shadowColor = stype.shadow; ctx.shadowBlur = 18; }
+
+  ctx.fillStyle = bodyCol;
+  rRect(ctx, -5, -14, 10, 28, 2); ctx.fill();
+
+  // ── Christmas candy-stripe segments on joker body ──
+  if (isJoker) {
+    ctx.save();
+    ctx.beginPath(); rRect(ctx, -5, -14, 10, 28, 2); ctx.clip();
+    const jCols = ['#cc0000', '#22aa44', '#ffffff'];
+    const segH = 9;
+    for (let s = 0; s < 5; s++) {
+      ctx.fillStyle = jCols[s % 3];
+      ctx.globalAlpha = 0.85;
+      ctx.fillRect(-5, -14 + s * segH, 10, segH);
+    }
+    // sparkle highlight
+    ctx.globalAlpha = 0.22;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(-5, -14, 3, 28);
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  }
+
+  // ── Hazard-tape warning stripes on splitter body ──
+  if (isSplitter) {
+    ctx.save();
+    ctx.beginPath(); rRect(ctx, -5, -14, 10, 28, 2); ctx.clip();
+    const stripeW = 5;
+    for (let s = -3; s <= 6; s++) {
+      const sy = s * stripeW * 2;
+      // yellow stripe
+      ctx.fillStyle = '#ffd700';
+      ctx.globalAlpha = 0.88;
+      ctx.beginPath();
+      ctx.moveTo(-5, sy - stripeW); ctx.lineTo(5, sy - stripeW * 3);
+      ctx.lineTo(5, sy - stripeW * 3 + stripeW); ctx.lineTo(-5, sy - stripeW + stripeW);
+      ctx.closePath(); ctx.fill();
+    }
+    // shiny highlight on left edge
+    ctx.globalAlpha = 0.18;
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath(); ctx.roundRect(-5, -14, 3, 28, [2, 0, 0, 2]); ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  }
+
+  // ── Nose (pointier on splitter) ──
+  ctx.fillStyle = noseCol;
+  ctx.beginPath();
+  if (isSplitter) {
+    ctx.moveTo(0, -27); ctx.lineTo(-5, -14); ctx.lineTo(5, -14);
+  } else {
+    ctx.moveTo(0, -23); ctx.lineTo(-5, -14); ctx.lineTo(5, -14);
+  }
+  ctx.closePath(); ctx.fill();
+
+  ctx.fillStyle = finCol;
+  [-1, 1].forEach(dx => {
+    ctx.beginPath();
+    if (isSplitter) {
+      ctx.moveTo(dx*5, 12); ctx.lineTo(dx*18, 24); ctx.lineTo(dx*5, 17);
+    } else {
+      ctx.moveTo(dx*5, 9); ctx.lineTo(dx*13, 18); ctx.lineTo(dx*5, 13);
+    }
+    ctx.closePath(); ctx.fill();
+  });
+
+  ctx.shadowBlur = 0;
+
+  const flicker = 0.65 + Math.random() * 0.35;
+  ctx.globalAlpha = flicker;
+  const eg = ctx.createRadialGradient(0, 16, 0, 0, 16, 8);
+  eg.addColorStop(0, '#fff');
+  eg.addColorStop(0.4, isSplitter ? '#ff6600' : (isJoker ? '#22cc44' : (isQuestioned ? '#ff9f1c' : '#ff4400')));
+  eg.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = eg;
+  ctx.beginPath(); ctx.ellipse(0, 16, 4, 9, 0, 0, Math.PI*2); ctx.fill();
+  ctx.globalAlpha = 1;
+
+  ctx.restore();
+
+  if (isQuestioned) {
+    const pulse = 0.7 + 0.3 * Math.sin(now * 0.007);
+    ctx.globalAlpha = pulse;
+    ctx.fillStyle = '#2ec4b6';
+    ctx.font = 'bold 10px Rubik, Segoe UI, Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText('▼ יירוט', m.x, m.y - 30);
+    ctx.globalAlpha = 1;
+  }
+}
+
+function drawInterceptor(ic) {
+  ic.trail.forEach((pt, i) => {
+    ctx.globalAlpha = (i / ic.trail.length) * 0.4;
+    ctx.fillStyle = '#2ec4b6';
+    ctx.beginPath(); ctx.arc(pt.x, pt.y, (i/ic.trail.length)*3+0.5, 0, Math.PI*2); ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+
+  const ang = Math.atan2(ic.vx, -ic.vy);
+  ctx.save();
+  ctx.translate(ic.x, ic.y);
+  ctx.rotate(ang);
+  ctx.fillStyle = '#2ec4b6';
+  ctx.fillRect(-3,-13,6,18);
+  ctx.fillStyle = '#cbf3f0';
+  ctx.beginPath(); ctx.moveTo(0,-19); ctx.lineTo(-3,-13); ctx.lineTo(3,-13); ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+
+function drawExplosion(ex) {
+  ctx.globalAlpha = ex.alpha * 0.45;
+  ctx.strokeStyle = '#ff9f1c';
+  ctx.lineWidth = 3;
+  const t = ex.frame / ex.dur;
+  ctx.beginPath(); ctx.arc(ex.x, ex.y, ex.maxR * Math.min(t*2,1), 0, Math.PI*2); ctx.stroke();
+
+  ex.particles.forEach(p => {
+    if (p.alpha <= 0) return;
+    ctx.globalAlpha = p.alpha;
+    ctx.fillStyle = p.col;
+    ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(0.5, p.r), 0, Math.PI*2); ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+}
+
+function drawFloats() {
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = 'bold 17px Rubik, Segoe UI, Arial';
+  floatTexts.forEach(f => {
+    ctx.globalAlpha = f.alpha;
+    ctx.fillStyle = f.col;
+    ctx.fillText(f.text, f.x, f.y);
+  });
+  ctx.globalAlpha = 1;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  UI HELPERS
+// ═══════════════════════════════════════════════════════════
+function showQ(text) {
+  questionStartTime = performance.now();
+  document.getElementById('question-text').textContent = text;
+  const hint = document.getElementById('question-hint');
+  if (questionedMissile?.splitter) {
+    hint.textContent = '🔥 יירט את הטיל השמן — הוא יתפצל לשני טילים!';
+    hint.style.color = '#ff5500';
+    hint.style.fontWeight = '700';
+  } else if (questionedMissile?.special) {
+    const st = SPECIAL_TYPES[questionedMissile.specialType];
+    hint.textContent = `יירט לקבל: ${st.label}`;
+    hint.style.color = st.col;
+    hint.style.fontWeight = '700';
+  } else {
+    hint.textContent = 'לחץ על הסוללה עם התשובה הנכונה';
+    hint.style.color = '';
+    hint.style.fontWeight = '';
+  }
+  document.getElementById('question-display').classList.add('visible');
+  updateCardUI(); // swap_question card brightens when question is active
+}
+function hideQ() {
+  document.getElementById('question-display').classList.remove('visible');
+  const hint = document.getElementById('question-hint');
+  hint.style.color = '';
+  hint.style.fontWeight = '';
+  updateCardUI(); // swap_question card dims when no question
+}
+
+let missTimer = null;
+let powerBannerTimer = null;
+function showPowerBanner(text, col) {
+  const inner = document.getElementById('power-banner-inner');
+  inner.textContent = text;
+  inner.style.color = col;
+  inner.style.borderColor = col;
+  inner.style.textShadow = `0 0 20px ${col}, 0 2px 4px rgba(0,0,0,0.9)`;
+  document.getElementById('power-banner').classList.add('visible');
+  clearTimeout(powerBannerTimer);
+  powerBannerTimer = setTimeout(() => {
+    document.getElementById('power-banner').classList.remove('visible');
+  }, 2200);
+}
+
+function addEnergy(amount) {
+  energy = Math.min(energy + amount, MAX_ENERGY);
+  updateLaserBtn();
+}
+
+function updateLaserBtn() {
+  const btn = document.getElementById('laser-btn');
+  if (!btn) return;
+  if (energy >= MAX_ENERGY) {
+    btn.disabled = false;
+    btn.classList.add('ready');
+  } else {
+    btn.disabled = true;
+    btn.classList.remove('ready');
+  }
+}
+
+function activateLaser() {
+  if (energy < MAX_ENERGY) return;
+  energy = 0;
+  streak = 0;
+  updateLaserBtn();
+
+  const targets = missiles.filter(m => m.active);
+  if (targets.length === 0) return;
+
+  // Fire laser beams from each truck to each target
+  trucks.forEach(truck => {
+    targets.forEach(m => {
+      lasers.push({ x1: truck.x, y1: truck.y - 38, x2: m.x, y2: m.y, alpha: 1, elapsed: 0 });
+    });
+  });
+
+  // Destroy all targets
+  targets.forEach(m => {
+    m.active = false;
+    explosions.push(mkExplosion(m.x, m.y, true));
+    beep('boom');
+    let pts = 70 * (doubleScoreTimer > 0 ? 2 : 1);
+    score += pts;
+    addFloat(`+${pts}`, m.x, m.y - 10, '#00dcff');
+    if (m.special) {
+      applySpecialEffect(m.specialType, m.x); // give card / apply power
+    } else {
+      resolved++; // count regular, splitter, mini toward wave
+    }
+  });
+
+  // Clear game question state
+  questionedMissile = null;
+  hideQ();
+  gameState = 'PLAYING';
+  updateHUD();
+}
+
+function showMiss() {
+  const el = document.getElementById('miss-feedback');
+  el.classList.add('visible');
+  clearTimeout(missTimer);
+  missTimer = setTimeout(() => el.classList.remove('visible'), 950);
+}
+
+function showBanner(title, sub) {
+  document.getElementById('level-up-text').textContent = title;
+  document.getElementById('level-up-sub').textContent  = sub;
+  document.getElementById('level-up-banner').classList.add('visible');
+}
+function hideBanner() {
+  document.getElementById('level-up-banner').classList.remove('visible');
+}
+
+function showScreen(name) {
+  ['start','gameover','win'].forEach(id => {
+    document.getElementById(`screen-${id}`).classList.toggle('hidden', id !== name);
+  });
+}
+
+function updateHUD() {
+  document.getElementById('score-val').textContent = score;
+  document.getElementById('wave-val').textContent  = wave;
+  document.getElementById('lives-val').textContent = '❤'.repeat(Math.max(0,lives));
+}
+
+// ═══════════════════════════════════════════════════════════
+//  EVENTS
+// ═══════════════════════════════════════════════════════════
+function logicalCoords(e) {
+  const r = canvas.getBoundingClientRect();
+  const cx = e.touches ? e.touches[0].clientX : e.clientX;
+  const cy = e.touches ? e.touches[0].clientY : e.clientY;
+  return { x:(cx-r.left)*(W/r.width), y:(cy-r.top)*(H/r.height) };
+}
+
+function truckAt(x, y) {
+  return trucks.find(t =>
+    t.stock > 0 &&
+    Math.abs(x - t.x) < TRUCK_HIT_HW &&
+    y > t.y - TRUCK_HIT_HH && y < t.y + 22
+  );
+}
+
+canvas.addEventListener('click', e => {
+  e.preventDefault();
+  if (gameState !== 'QUESTION' || !questionedMissile?.active) return;
+  const {x,y} = logicalCoords(e);
+  const t = truckAt(x, y);
+  if (t) fireTruck(t);
+});
+
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  if (gameState !== 'QUESTION' || !questionedMissile?.active) return;
+  const {x,y} = logicalCoords(e);
+  const t = truckAt(x, y);
+  if (t) fireTruck(t);
+}, {passive: false});
+
+canvas.addEventListener('mousemove', e => {
+  if (gameState !== 'QUESTION') { hoveredTruck = null; canvas.style.cursor = 'default'; return; }
+  const {x,y} = logicalCoords(e);
+  hoveredTruck = truckAt(x, y) || null;
+  canvas.style.cursor = hoveredTruck ? 'pointer' : 'default';
+});
+
+// ESC = pause / unpause
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    e.preventDefault();
+    togglePause();
+  }
+});
+
+// Mute button
+document.getElementById('btn-mute').addEventListener('click', () => {
+  unlockAudio();
+  muted = !muted;
+  const btn = document.getElementById('btn-mute');
+  btn.textContent = muted ? '🔇' : '🔊';
+  btn.classList.toggle('muted', muted);
+});
+
+// Pause button
+document.getElementById('btn-pause').addEventListener('click', () => {
+  unlockAudio();
+  togglePause();
+});
+
+// Resume button (inside pause overlay)
+document.getElementById('btn-resume').addEventListener('click', () => {
+  togglePause();
+});
+
+// Main menu button (inside pause overlay)
+document.getElementById('btn-menu').addEventListener('click', () => {
+  gameState = 'START';
+  pausedState = null;
+  waveActive = false;
+  missiles = []; interceptors = []; explosions = []; floatTexts = []; shockwaves = [];
+  doubleScoreTimer = 0; freezeTimer = 0; hintTimer = 0; wrongOnlyTimer = 0; blastTimer = 0; shieldActive = false;
+  questionedMissile = null; damageFlash = 0; hoveredTruck = null;
+  hideQ();
+  document.getElementById('pause-overlay').classList.add('hidden');
+  document.getElementById('btn-pause').classList.remove('paused');
+  showScreen('start');
+});
+
+// Level select
+document.querySelectorAll('.level-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    minMathLvl = parseInt(btn.dataset.level);
+    document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    if (window.hj) hj('event', `difficulty_selected_${minMathLvl}`);
+  });
+});
+
+document.getElementById('btn-start').addEventListener('click', () => {
+  unlockAudio(); startNewGame();
+});
+document.getElementById('btn-replay').addEventListener('click', () => {
+  unlockAudio(); startNewGame();
+});
+document.getElementById('btn-replay-win').addEventListener('click', () => {
+  unlockAudio(); startNewGame();
+});
+document.getElementById('btn-gameover-menu').addEventListener('click', () => {
+  gameState = 'START';
+  missiles = []; interceptors = []; explosions = []; floatTexts = []; shockwaves = [];
+  doubleScoreTimer = 0; freezeTimer = 0; hintTimer = 0; wrongOnlyTimer = 0; blastTimer = 0; shieldActive = false;
+  questionedMissile = null; damageFlash = 0; hoveredTruck = null; waveActive = false;
+  hideQ();
+  showScreen('start');
+});
+
+document.getElementById('laser-btn').addEventListener('click', () => {
+  unlockAudio(); activateLaser();
+});
+
+// ═══════════════════════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════════════════════
+function ri(a, b) { return Math.floor(Math.random()*(b-a+1))+a; }
+function shuffle(a) {
+  const arr = [...a];
+  for (let i=arr.length-1;i>0;i--) {
+    const j=Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+  }
+  return arr;
+}
+function rRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y);
+  ctx.closePath();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  BOOT
+// ═══════════════════════════════════════════════════════════
+initTrucks();
+updateHUD();
+showScreen('start');
+requestAnimationFrame(loop);
+
+</script>
+</body>
+</html>

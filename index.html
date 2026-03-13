@@ -1531,8 +1531,8 @@ function triggerBlastSplash(ex, ey) {
       questionedMissile = null;
       hideQ();
     }
-    // Count regular/splitter/mini toward wave resolution
-    resolved++;
+    // Count toward wave resolution — special missiles are NOT in totalMissiles
+    if (!m.special) resolved++;
   });
 
   updateHUD();

@@ -907,9 +907,9 @@ function mkMissile() {
 }
 
 function mkSpecialMissile() {
-  // Joker: very rare (4%), only from wave 4 onward
+  // Joker: rare (8%), only from wave 4 onward
   let type;
-  if (wave >= 4 && Math.random() < 0.04) {
+  if (wave >= 4 && Math.random() < 0.08) {
     type = 'joker';
   } else {
     const keys = Object.keys(SPECIAL_TYPES).filter(k => k !== 'joker');
@@ -1109,7 +1109,7 @@ function update(dt) {
     if (specialSpawnTimer <= 0) {
       const hasSpecial = missiles.some(m => m.special);
       if (!hasSpecial) missiles.push(mkSpecialMissile());
-      specialSpawnTimer = ri(14000, 26000); // next special in 14-26 seconds
+      specialSpawnTimer = ri(9000, 16000); // next special in 9-16 seconds
     }
   }
 

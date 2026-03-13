@@ -715,6 +715,7 @@ let wrongOnlyTimer   = 0;   // ms remaining — wrong-answer batteries blocked
 let blastTimer       = 0;   // ms remaining — interceptors explode in splash radius
 let shieldActive     = false;
 let specialSpawnTimer = 25000; // ms until next special missile spawn
+let specialBag        = [];    // shuffled deck — ensures full rotation before repeats
 let waveHasSplitter   = false; // whether the current wave ends with the fat splitter
 
 // ── Streak & Energy ──
@@ -906,14 +907,25 @@ function mkMissile() {
   };
 }
 
+function refillSpecialBag() {
+  // Shuffle all non-joker types into the bag (Fisher-Yates)
+  const keys = Object.keys(SPECIAL_TYPES).filter(k => k !== 'joker');
+  specialBag = [...keys];
+  for (let i = specialBag.length - 1; i > 0; i--) {
+    const j = ri(0, i);
+    [specialBag[i], specialBag[j]] = [specialBag[j], specialBag[i]];
+  }
+}
+
 function mkSpecialMissile() {
   // Joker: rare (8%), only from wave 4 onward
   let type;
   if (wave >= 4 && Math.random() < 0.08) {
     type = 'joker';
   } else {
-    const keys = Object.keys(SPECIAL_TYPES).filter(k => k !== 'joker');
-    type = keys[ri(0, keys.length - 1)];
+    // Draw from shuffled bag — refill when empty (guarantees full rotation)
+    if (specialBag.length === 0) refillSpecialBag();
+    type = specialBag.pop();
   }
   const m = mkMissile();
   m.special     = true;
@@ -1623,6 +1635,7 @@ function startNewGame() {
   document.getElementById('laser-btn-wrap').style.display = '';
   document.getElementById('card-slots').style.display    = '';
   specialSpawnTimer = ri(9000, 15000); // first special missile within 9-15 seconds
+  refillSpecialBag();                  // fresh shuffled deck on each new game
   if (window.hj) hj('event', `game_start_diff${minMathLvl}`);
   if (gameState === 'PAUSED') {
     document.getElementById('pause-overlay').classList.add('hidden');
